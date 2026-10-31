@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ректификация времени рождения</title>
+<meta name="description" content="Уточнение времени рождения, чтобы карта и консультации были точнее. Время в документах редко совпадает с реальным до минуты.">
+<!-- Сайт пока скрыт от поисковиков: убрать строку ниже перед запуском -->
+<meta name="robots" content="noindex, nofollow">
+
+<!-- Превью при пересылке ссылки (Telegram, WhatsApp, Facebook). og:image – картинка 1200×630 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ректификация времени рождения">
+<meta property="og:description" content="Уточнение времени рождения, чтобы карта и консультации были точнее. Время в документах редко совпадает с реальным до минуты.">
+<meta property="og:image" content="og.jpg">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237B2D3B'/%3E%3Ccircle cx='32' cy='32' r='11' fill='none' stroke='%23FAF7F1' stroke-width='4'/%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;600&family=Prata&display=swap" rel="stylesheet">
+
+<!-- ===== Meta Pixel: вставить код из Events Manager сюда ===== -->
+<!-- ===== Яндекс Метрика (по желанию): вставить счётчик сюда ===== -->
+
+<style>
+  :root {
+    --ink: #17191E;
+    --paper: #FAF7F1;
+    --accent: #7B2D3B;
+    --muted: #5d5f66;
+    --rule: #e4ded2;
+    --box: #f2ece1;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Golos Text", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 19px;
+    line-height: 1.62;
+  }
+  main {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 64px 20px 40px;
+  }
+  h1, h2 {
+    font-family: "Prata", Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+  }
+  h1 {
+    font-size: 40px;
+    line-height: 1.18;
+    margin: 0 0 22px;
+  }
+  .lead {
+    font-size: 27px;
+    line-height: 1.38;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 40px;
+    padding-left: 20px;
+    border-left: 3px solid var(--accent);
+  }
+  h2 {
+    font-size: 28px;
+    line-height: 1.25;
+    margin: 64px 0 18px;
+  }
+  h2::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 2px;
+    background: var(--accent);
+    margin-bottom: 20px;
+  }
+  p { margin: 0 0 18px; }
+  ul { margin: 0 0 20px; padding-left: 1.2em; }
+  li { margin: 0 0 8px; }
+  li::marker { color: var(--accent); }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  strong { font-weight: 600; }
+  .standalone { font-weight: 600; }
+  .price {
+    color: var(--accent);
+  }
+  .cta-block {
+    margin: 32px 0 12px;
+  }
+  .cta {
+    display: block;
+    text-align: center;
+    background: var(--accent);
+    color: var(--paper);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 19px;
+    line-height: 1.35;
+    padding: 20px 24px;
+    border-radius: 10px;
+    transition: background .15s ease;
+  }
+  .cta:hover { background: #63232f; text-decoration: none; }
+  .note {
+    font-size: 16px;
+    color: var(--muted);
+    margin-top: 28px;
+  }
+  .video, .video-placeholder {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    margin: 32px 0 8px;
+    border-radius: 10px;
+    background: #1C2B4A;
+  }
+  .video.vertical { aspect-ratio: 9 / 16; max-width: 360px; margin-left: auto; margin-right: auto; }
+  .video-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(250, 247, 241, .6);
+    font-size: 16px;
+  }
+  .special {
+    margin: 56px 0 0;
+    padding: 24px 24px 8px;
+    background: var(--box);
+    border-radius: 10px;
+    font-size: 17px;
+    line-height: 1.55;
+  }
+  .special .kicker {
+    font-size: 13px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  footer {
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+    border-top: 1px solid var(--rule);
+    font-size: 14px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); }
+  .todo { background: #fff3b0; color: #6b4e00; font-size: .85em; padding: 0 4px; border-radius: 3px; }
+
+  @media (max-width: 600px) {
+    body { font-size: 18px; }
+    main { padding-top: 40px; }
+    h1 { font-size: 31px; }
+    .lead { font-size: 22px; padding-left: 16px; }
+    h2 { font-size: 24px; margin-top: 52px; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <h1>Ректификация: уточните время рождения, чтобы карта была точной.</h1>
+  <p class="lead">Время в документах редко совпадает с реальным до минуты. А даже 20 минут разницы заметно меняют карту.</p>
+
+  <p>Ректификация – это расчёт точного времени рождения по анкете. Не по записи в роддоме, а по тому, как карта «включилась» на самом деле.</p>
+
+  <h2>Когда она нужна</h2>
+  <ul>
+    <li>Если вы не знаете время рождения или сомневаетесь в нём.</li>
+    <li>Даже если уверены: в родах время часто записывают приблизительно, а воспоминания родителей неточны.</li>
+    <li>Перед подробной консультацией: от времени рождения зависит разбор всех сфер жизни, а без точного времени нельзя делать прогнозы.</li>
+  </ul>
+
+  <h2>Как это проходит</h2>
+  <ol>
+    <li>Записываетесь в боте и оплачиваете.</li>
+    <li>Заполняете анкету. <span class="todo">[НУЖНО: что в анкете – события жизни, фото и т.п.]</span></li>
+    <li>Я делаю расчёт – <span class="todo">[НУЖНО: срок]</span>.</li>
+    <li>Присылаю вам уточнённое время рождения.</li>
+  </ol>
+
+  <h2>Цена</h2>
+
+  <p>Ректификация – <span class="price">$79</span>.</p>
+
+  <p>Если нужно срочно – вдвое дороже: <span class="price">$158</span>. <span class="todo">[НУЖНО: в какой срок]</span></p>
+
+  <p>Во все консультации, кроме экспресс, ректификация входит в подарок: <a href="/deti/podrostki/">подростковая</a>, детско-родительская, для беременных, для тех, кто готовится забеременеть. <span class="todo">[НУЖНО: и финансовые – тоже?]</span></p>
+
+  <h2>Гарантия</h2>
+
+  <p><span class="todo">[НУЖНО: какая гарантия для ректификации]</span></p>
+
+  <h2>С чего начать</h2>
+
+  <p>Запишитесь в боте. Анкету пришлю уже в Телеграме.</p>
+
+  <div class="cta-block">
+    <a class="cta" id="cta" href="https://t.me/YOUR_BOT">→ Заказать ректификацию за $79</a>
+  </div>
+
+  <p class="note">Если астрология не вписывается в вашу картину мира – это нормально, на свете есть много других источников информации, к которым можно обращаться.</p>
+
+</main>
+
+<footer>
+  <a href="https://instagram.com/razreshite.razrushit">@razreshite.razrushit</a>
+  <!-- TODO: ссылки на политику конфиденциальности и условия оплаты/возврата -->
+</footer>
+
+<script>
+  /* ===== Настройки ===== */
+  var BOT_USERNAME = "YOUR_BOT";      // имя бота без @
+  var START_PREFIX = "rekti";          // метка лендинга для бота
+
+  /* Передаём метку в бота: t.me/bot?start=rekti_<utm_campaign>
+     Telegram разрешает в start только латиницу, цифры, _ и -, до 64 символов */
+  (function () {
+    try {
+      var q = new URLSearchParams(location.search);
+      var tag = q.get("utm_campaign") || q.get("utm_source") || "";
+      tag = tag.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 50);
+      var start = tag ? START_PREFIX + "_" + tag : START_PREFIX;
+      var a = document.getElementById("cta");
+      a.href = "https://t.me/" + BOT_USERNAME + "?start=" + start;
+      a.addEventListener("click", function () {
+        if (typeof fbq === "function") fbq("track", "Lead");
+        if (typeof ym === "function" && window.YM_ID) ym(window.YM_ID, "reachGoal", "cta_click");
+      });
+    } catch (e) {}
+  })();
+</script>
+</body>
+</html>
