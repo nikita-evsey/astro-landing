@@ -67,8 +67,15 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .wheel { animation: none; } }
-  .tag {
+  .back {
     display: inline-block;
+    color: #DCE7E1; font-size: 15px; font-weight: 600;
+    text-decoration: none;
+    margin-bottom: 26px;
+  }
+  .back:hover { color: #FFFFFF; text-decoration: underline; }
+  .tag {
+    display: block;
     font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
     color: var(--ochre);
     margin-bottom: 18px;
@@ -154,6 +161,7 @@
     </g>
   </svg>
   <div class="wrap">
+    <a class="back" href="/">← Все консультации</a>
     <div class="tag">Специальный проект</div>
     <h1>Колесо<span class="sub">Астрологи – в помощь родителям детей с осложнённым развитием</span></h1>
     <p>Бесплатная консультация для семей, где растёт ребёнок с осложнённым развитием или сложным диагнозом.</p>
