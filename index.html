@@ -203,15 +203,44 @@
     .koleso { display: block; margin-top: 18px; text-decoration: none; color: var(--paper); background: #2F5D57; border-radius: 14px; padding: 22px 28px; font-size: 17px; line-height: 1.5; }
     .koleso b { display: block; font-family: "Prata", Georgia, serif; font-weight: 400; font-size: 22px; margin-bottom: 4px; }
     .koleso:hover { background: #274f4a; }
+    .about { display: grid; grid-template-columns: 112px 1fr; gap: 6px 24px; align-items: center; margin: 0 0 40px; }
+    .about .photo {
+      width: 112px; height: 112px; border-radius: 50%;
+      background: var(--box); color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; text-align: center; line-height: 1.3;
+    }
+    /* Фото: заменить div.photo на <img class="photo" src="photo.jpg" alt=""> (квадрат от 300×300) */
+    img.photo { object-fit: cover; }
+    .about .who { font-size: 17px; line-height: 1.5; margin: 0; }
+    .about .who b { display: block; font-family: "Prata", Georgia, serif; font-weight: 400; font-size: 24px; line-height: 1.25; margin-bottom: 6px; }
+    .facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; list-style: none; padding: 0; margin: 20px 0 0; }
+    .facts li { margin: 0; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 14px 14px 12px; font-size: 14px; line-height: 1.35; color: var(--muted); }
+    .facts li b { display: block; font-family: "Prata", Georgia, serif; font-weight: 400; font-size: 24px; line-height: 1.1; color: var(--accent); margin-bottom: 6px; }
     @media (max-width: 560px) {
       .block { padding: 22px 18px 16px; }
       .block h2 { font-size: 26px; }
       .koleso { padding: 20px 18px; }
+      .about { grid-template-columns: 80px 1fr; gap: 6px 16px; }
+      .about .photo { width: 80px; height: 80px; }
+      .about .who b { font-size: 21px; }
+      .facts { grid-template-columns: 1fr 1fr; }
     }
   </style>
 
   <h1>Астрологические консультации</h1>
   <p class="lead">Дети, деньги и вы сами – по вашей карте, а не по «среднему человеку» из книги.</p>
+
+  <section class="about">
+    <div class="photo">фото</div>
+    <p class="who"><b>Астролог-консультант, а до этого – маркетинг, IT и обучение</b>Почти 20 лет помимо основных проектов в маркетинге и IT занимаюсь обучением и карьерой молодых людей. С 2010-х изучаю психологию.</p>
+    <ul class="facts">
+      <li><b>14 500</b>студентов прошли программу The Graduate, которую я разработал под эгидой Google</li>
+      <li><b>20 лет</b>в маркетинге, IT и обучении</li>
+      <li><b>2,5 года</b>обучения западной астрологии в школе Павла Андреева</li>
+      <li><b>2 года</b>консультирую открыто, детские консультации – дольше двух лет</li>
+    </ul>
+  </section>
 
   <div class="blocks">
 
@@ -219,11 +248,11 @@
       <h2><a href="/deti/">Дети</a></h2>
       <p class="what">Как гармонично вырастить конкретно вашего ребёнка.</p>
       <ul class="items">
-        <li><a href="/deti/express/">Экспресс-консультация<small>для родителей детей до 12 лет</small></a><span class="price">$9</span></li>
-        <li><a href="/deti/deti-roditeli/">Детско-родительская консультация<small>ребёнок и родители вместе, любой возраст</small></a><span class="price">$399</span></li>
-        <li><a href="/deti/podrostki/">Подростковая консультация<small>от 12–14 лет</small></a><span class="price">$399</span></li>
-        <li><a href="/deti/beremennye/">Мягкая консультация для беременных</a><span class="price">$199</span></li>
-        <li><a href="/deti/planirovanie/">Для тех, кто готовится забеременеть</a><span class="price">$399</span></li>
+        <li><a href="/deti/express/">Экспресс-консультация<small>для родителей детей до 12 лет</small></a></li>
+        <li><a href="/deti/deti-roditeli/">Детско-родительская консультация<small>ребёнок и родители вместе, любой возраст</small></a></li>
+        <li><a href="/deti/podrostki/">Подростковая консультация<small>от 12–14 лет</small></a></li>
+        <li><a href="/deti/beremennye/">Мягкая консультация для беременных</a></li>
+        <li><a href="/deti/planirovanie/">Для тех, кто готовится забеременеть</a></li>
       </ul>
       <a class="more" href="/deti/">Все консультации о детях →</a>
     </section>
@@ -244,8 +273,8 @@
       <h2>Общие консультации</h2>
       <p class="what">О вас самих – и о том, с чего начинается любая консультация.</p>
       <ul class="items">
-        <li><span>«Кто я» <span class="soon">скоро</span><small>ядро личности и основные сферы жизни: характер, таланты, сильные и слабые стороны, мотивация, скрытые установки, деньги, отношения – и 1–2 ваших вопроса подробнее. 60 минут</small></span><span class="price"><span class="todo">[НУЖНО: цена]</span></span></li>
-        <li><a href="/rekti/">Ректификация<small>уточнение времени рождения, чтобы карта была точной</small></a><span class="price">$79</span></li>
+        <li><span>«Кто я» <span class="soon">скоро</span><small>ядро личности и основные сферы жизни: характер, таланты, сильные и слабые стороны, мотивация, скрытые установки, деньги, отношения – и 1–2 ваших вопроса подробнее</small></span></li>
+        <li><a href="/rekti/">Ректификация<small>уточнение времени рождения, чтобы карта была точной</small></a></li>
       </ul>
     </section>
 
