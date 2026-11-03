@@ -163,9 +163,43 @@
     .lead { font-size: 22px; padding-left: 16px; }
     h2 { font-size: 24px; margin-top: 52px; }
   }
+
+  :root { --blue: #1C2B4A; }
+  h2::before { background: var(--blue); }
+  li::marker { color: var(--blue); }
+  .icon { color: var(--blue); }
+
+  /* Шапка сайта (на рекламных дублях её нет: header: no во фрагменте) */
+  .site { border-bottom: 1px solid var(--rule); background: var(--paper); }
+  .site .in { max-width: 760px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-family: "Prata", Georgia, serif; font-size: 19px; line-height: 1.2; }
+  .brand svg { flex: none; }
+  .site nav { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 16px; }
+  .site nav a { color: var(--ink); text-decoration: none; }
+  .site nav a:hover { color: var(--accent); }
+  .site nav a[aria-current] { color: var(--accent); font-weight: 600; }
+  .site + main { padding-top: 48px; }
+
+  /* Цена рядом с кнопкой */
+  .cta-block { display: flex; align-items: center; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; padding: 20px 24px; background: #fff; border: 1px solid var(--rule); border-radius: 14px; }
+  .cta-price { font-family: "Prata", Georgia, serif; font-size: 36px; line-height: 1; color: var(--accent); }
+  .cta-price small { display: block; font-family: "Golos Text", sans-serif; font-size: 15px; color: var(--muted); margin-top: 8px; }
+  .cta { display: inline-block; font-size: 17px; padding: 14px 28px; border-radius: 999px; }
+
+  @media (max-width: 600px) {
+    .site .in { padding: 12px 16px; }
+    .site nav { gap: 4px 16px; font-size: 15px; }
+    .site + main { padding-top: 32px; }
+    .cta-block { flex-direction: column; align-items: stretch; text-align: center; padding: 20px 18px; }
+    .cta { display: block; }
+  }
 </style>
 </head>
 <body>
+<header class="site"><div class="in">
+  <a class="brand" href="/"><svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#7B2D3B"/><circle cx="32" cy="32" r="11" fill="none" stroke="#FAF7F1" stroke-width="4"/></svg><span>Консультации астролога</span></a>
+  <nav><a href="/deti/" aria-current="page">Дети</a><a href="/#dengi">Деньги</a><a href="/rekti/">Ректификация</a><a href="/obo-mne/">Обо мне</a></nav>
+</div></header>
 <main>
 
   <h1>Узнайте, как гармонично вырастить конкретно вашего ребёнка, а не «ребенка» из книги.</h1>
@@ -319,7 +353,8 @@
   <p>Выберите удобное время в боте. Данные для разбора (даты рождения) уточню уже в Телеграме.</p>
 
   <div class="cta-block">
-    <a class="cta" id="cta" href="https://t.me/YOUR_BOT">→ Записаться на экспресс-консультацию за $9</a>
+    <div class="cta-price">$9<small>за экспресс-консультацию</small></div>
+    <a class="cta" id="cta" href="https://t.me/YOUR_BOT">Записаться в Телеграме →</a>
   </div>
 
   <p class="note">Если астрология не вписывается в вашу картину мира – это нормально, на свете есть много других источников информации, к которым можно обращаться.</p>
