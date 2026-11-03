@@ -169,7 +169,6 @@
   li::marker { color: var(--blue); }
   .icon { color: var(--blue); }
   a { color: var(--ink); }
-  a:hover { color: var(--accent); }
   .dark { background: var(--blue); color: var(--paper); position: relative; isolation: isolate; }
   /* Текстура тёмных блоков – концентрические дуги из угла, как паттерн arcs на обложках */
   .dark.hero::before, .dark.me::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; opacity: .13; pointer-events: none;
@@ -185,7 +184,7 @@
   .brand svg { flex: none; }
   .site nav { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 16px; }
   .site nav a { color: var(--ink); text-decoration: none; }
-  .site nav a:hover { color: var(--accent); }
+  .site nav a:hover { text-decoration: underline; }
   .site nav a[aria-current] { font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
   .site + main { padding-top: 48px; }
 
