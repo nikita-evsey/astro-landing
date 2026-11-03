@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Обо мне</title>
-<meta name="description" content="Две темы – дети и деньги. Почти 20 лет в маркетинге, IT и обучении, психология с 2010-х, 2,5 года западной астрологии в школе Павла Андреева.">
+<title>Никита Евсей – обо мне</title>
+<meta name="description" content="Астролог западной школы. Почти 20 лет в маркетинге и IT, один из 40 сертифицированных тренеров Google в Европе. Две темы: дети и деньги.">
 <!-- Сайт пока скрыт от поисковиков: убрать строку ниже перед запуском -->
 <meta name="robots" content="noindex, nofollow">
 
 <!-- Превью при пересылке ссылки (Telegram, WhatsApp, Facebook). og:image – картинка 1200×630 -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Обо мне">
-<meta property="og:description" content="Две темы – дети и деньги. Почти 20 лет в маркетинге, IT и обучении, психология с 2010-х, 2,5 года западной астрологии в школе Павла Андреева.">
+<meta property="og:title" content="Никита Евсей – обо мне">
+<meta property="og:description" content="Астролог западной школы. Почти 20 лет в маркетинге и IT, один из 40 сертифицированных тренеров Google в Европе. Две темы: дети и деньги.">
 <meta property="og:image" content="og.jpg">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237B2D3B'/%3E%3Ccircle cx='32' cy='32' r='11' fill='none' stroke='%23FAF7F1' stroke-width='4'/%3E%3C/svg%3E">
@@ -168,17 +168,22 @@
   h2::before { background: var(--blue); }
   li::marker { color: var(--blue); }
   .icon { color: var(--blue); }
-  a { color: var(--blue); }
+  a { color: var(--ink); text-decoration-color: var(--accent); }
+  a:hover { color: var(--accent); }
+  .dark { background: var(--blue); color: var(--paper); }
+  .dark a { color: var(--paper); text-decoration-color: rgba(250,247,241,.5); }
+  .dark a:hover { color: #fff; }
 
   /* Шапка сайта (на рекламных дублях её нет: header: no во фрагменте) */
   .site { border-bottom: 1px solid var(--rule); background: var(--paper); }
   .site .in { max-width: 760px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 8px 24px; flex-wrap: wrap; }
   .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-family: "Prata", Georgia, serif; font-size: 19px; line-height: 1.2; }
+  .brand small { display: block; font-family: "Golos Text", sans-serif; font-size: 13px; color: var(--muted); letter-spacing: .02em; }
   .brand svg { flex: none; }
   .site nav { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 16px; }
   .site nav a { color: var(--ink); text-decoration: none; }
-  .site nav a:hover { color: var(--blue); }
-  .site nav a[aria-current] { color: var(--blue); font-weight: 600; }
+  .site nav a:hover { color: var(--accent); }
+  .site nav a[aria-current] { font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
   .site + main { padding-top: 48px; }
 
   /* Цена рядом с кнопкой */
@@ -198,37 +203,51 @@
 </head>
 <body>
 <header class="site"><div class="in">
-  <a class="brand" href="/"><svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#7B2D3B"/><circle cx="32" cy="32" r="11" fill="none" stroke="#FAF7F1" stroke-width="4"/></svg><span>Консультации астролога</span></a>
+  <a class="brand" href="/"><svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#7B2D3B"/><circle cx="32" cy="32" r="11" fill="none" stroke="#FAF7F1" stroke-width="4"/></svg><span>Никита Евсей<small>астролог</small></span></a>
   <nav><a href="/deti/">Дети</a><a href="/#dengi">Деньги</a><a href="/rekti/">Ректификация</a><a href="/obo-mne/" aria-current="page">Обо мне</a></nav>
 </div></header>
 <main>
 
   <style>
-    .me { display: grid; grid-template-columns: 160px 1fr; gap: 0 28px; align-items: center; margin: 0 0 8px; }
-    .me .photo {
-      width: 160px; height: 160px; border-radius: 50%;
-      background: var(--box); color: var(--muted);
-      display: flex; align-items: center; justify-content: center; font-size: 14px;
-    }
-    /* Фото: заменить div.photo на <img class="photo" src="photo.jpg" alt=""> (квадрат от 400×400) */
-    img.photo { object-fit: cover; }
-    .me .lead { margin: 0; }
+    .me { display: grid; grid-template-columns: 180px 1fr; gap: 0 32px; align-items: center; border-radius: 18px; padding: 36px; margin: 0 0 8px; }
+    .me .photo { width: 180px; height: 180px; border-radius: 50%; object-fit: cover; display: block; }
+    .me h1 { color: var(--paper); margin: 0 0 10px; font-size: 40px; }
+    .me p { margin: 0; font-size: 20px; line-height: 1.45; }
+    .me p + p { margin-top: 10px; font-size: 17px; color: rgba(250,247,241,.8); }
     .go { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--rule); }
     .go li { margin: 0; border-bottom: 1px solid var(--rule); }
     .go a { display: block; padding: 12px 0; text-decoration: none; font-weight: 600; }
-    .go a:hover { text-decoration: underline; }
     @media (max-width: 600px) {
-      .me { grid-template-columns: 1fr; }
-      .me .photo { width: 112px; height: 112px; margin-bottom: 20px; }
+      .me { grid-template-columns: 1fr; padding: 28px 20px; }
+      .me .photo { width: 120px; height: 120px; margin-bottom: 20px; }
+      .me h1 { font-size: 32px; }
+      .me p { font-size: 18px; }
     }
   </style>
 
-  <h1>Обо мне</h1>
+  <section class="me dark">
+    <img class="photo" src="/img/nikita.jpg" alt="Никита Евсей" width="180" height="180">
+    <div>
+      <h1>Никита Евсей</h1>
+      <p>Астролог западной школы. Консультирую о детях и деньгах.</p>
+      <p>Астрология для меня – инструмент диагностики, а не предсказаний и эзотерики.</p>
+    </div>
+  </section>
 
-  <div class="me">
-    <div class="photo">фото</div>
-    <p class="lead">У меня две темы: дети и деньги.</p>
-  </div>
+  <h2>Из мира, где всё измеряется</h2>
+
+  <p>Учился на инженера-энергетика и окончил магистратуру. Почти 20 лет занимался бизнесом в маркетинге и IT – в собственных агентствах и в найме на позициях C-level.</p>
+
+  <ul>
+    <li>Был одним из 40 сертифицированных тренеров Google в Европе и экспертом по обучению Яндекса.</li>
+    <li>Разработал под эгидой Google программу The Graduate, через которую прошли более 14 500 студентов в Казахстане, Беларуси и Украине. Лучшие получили стажировки и работу в реальных IT и других крупных компаниях.</li>
+    <li>Участвовал в консультациях по карьере для выпускников школ под эгидой Google – вместе с собственниками, топ-менеджерами и директорами по HR других компаний.</li>
+    <li>Преподавал студентам в университете.</li>
+    <li>Провёл десятки глубинных исследований того, что на самом деле движет людьми, когда они что-то покупают, выбирают, бросают, чего боятся.</li>
+    <li>Сейчас обучаю основателей и C-level IT-компаний, основал комьюнити IT-основателей.</li>
+  </ul>
+
+  <p>Поэтому деньги, карьера и своё дело – одна из двух моих тем.</p>
 
   <h2>Дети</h2>
 
@@ -238,22 +257,15 @@
 
   <p>С 2010-х я изучал психологию, и у меня есть понимание, что начинается все с детства, и все мы оттуда идем.</p>
 
-  <h2>Деньги и карьера</h2>
+  <h2>Как я пришёл в астрологию</h2>
 
-  <p>Почти 20 лет помимо основных рабочих проектов в маркетинге и IT я занимаюсь обучением:</p>
-  <ul>
-    <li>разработал под эгидой Google программу The Graduate, через которую прошли более 14 500 студентов в Казахстане, Беларуси и Украине. Лучшие получили стажировки и работу в реальных IT и других крупных компаниях;</li>
-    <li>участвовал в консультациях по карьере для выпускников школ под эгидой Google – вместе с собственниками, топ-менеджерами и директорами по HR других компаний;</li>
-    <li>преподавал студентам в университете.</li>
-  </ul>
+  <p>Долго я её просто не рассматривал, как не рассматривают гороскоп в утренней газете. Первый опыт был не слишком тёплым: на детской консультации почти все прогнозы прошли мимо.</p>
 
-  <h2>Астрология</h2>
+  <p>Во второй раз я услышал выступление астролога Павла Андреева – здравое, скептическое, ничего про кисельные берега и тонкие планы. Стиль показался мне даже несколько инженерным.</p>
 
-  <p>За последние несколько лет я закончил длительное обучение западной астрологии в школе Павла Андреева – 2,5 года – и стал практиковать: сначала для семьи, своих детей и друзей, потом для друзей друзей и т.д.</p>
+  <p>Потом были короткий курс, книги, знакомство с другими астрологами и 2,5 года обучения в школе Павла Андреева. Консультировать я начал после того, как увидел на себе и своей семье, как это работает долгосрочно, – сначала для семьи и друзей, потом для друзей друзей. Вот уже два года я консультирую открыто.</p>
 
-  <p>Постепенно результаты у реальных людей стали все лучше видны, и вот уже два года я консультирую открыто.</p>
-
-  <p>Астрология несет в себе ключи к познанию себя, окружающего мира и своей семьи. Это не панацея от всех бед, но рабочий инструмент диагностики.</p>
+  <p>Что меня в итоге удержало – не «магия», а узнавание основы. Я стал встречать в этой системе те же механизмы, которые видел в психологии, в исследованиях поведения, в приличной бизнес-литературе и в том, что знали наши деды и бабушки.</p>
 
   <h2>Консультации</h2>
 
