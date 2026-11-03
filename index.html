@@ -203,7 +203,11 @@
     .koleso { display: block; margin-top: 18px; text-decoration: none; color: var(--paper); background: #2F5D57; border-radius: 14px; padding: 22px 28px; font-size: 17px; line-height: 1.5; }
     .koleso b { display: block; font-family: "Prata", Georgia, serif; font-weight: 400; font-size: 22px; margin-bottom: 4px; }
     .koleso:hover { background: #274f4a; }
-    .about { display: grid; grid-template-columns: 112px 1fr; gap: 6px 24px; align-items: center; margin: 0 0 40px; }
+    .about { display: grid; grid-template-columns: 112px 1fr; gap: 0 24px; align-items: start; margin: 0 0 44px; }
+    .about .text p { font-size: 18px; margin: 0 0 12px; }
+    .about .text p:last-child { margin-bottom: 0; }
+    .about h2 { margin: 4px 0 12px; font-size: 26px; }
+    .about h2::before { display: none; }
     .about .photo {
       width: 112px; height: 112px; border-radius: 50%;
       background: var(--box); color: var(--muted);
@@ -212,19 +216,14 @@
     }
     /* Фото: заменить div.photo на <img class="photo" src="photo.jpg" alt=""> (квадрат от 300×300) */
     img.photo { object-fit: cover; }
-    .about .who { font-size: 17px; line-height: 1.5; margin: 0; }
-    .about .who b { display: block; font-family: "Prata", Georgia, serif; font-weight: 400; font-size: 24px; line-height: 1.25; margin-bottom: 6px; }
-    .facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; list-style: none; padding: 0; margin: 20px 0 0; }
-    .facts li { margin: 0; background: #fff; border: 1px solid var(--rule); border-radius: 12px; padding: 14px 14px 12px; font-size: 14px; line-height: 1.35; color: var(--muted); }
-    .facts li b { display: block; font-family: "Prata", Georgia, serif; font-weight: 400; font-size: 24px; line-height: 1.1; color: var(--accent); margin-bottom: 6px; }
     @media (max-width: 560px) {
       .block { padding: 22px 18px 16px; }
       .block h2 { font-size: 26px; }
       .koleso { padding: 20px 18px; }
-      .about { grid-template-columns: 80px 1fr; gap: 6px 16px; }
       .about .photo { width: 80px; height: 80px; }
-      .about .who b { font-size: 21px; }
-      .facts { grid-template-columns: 1fr 1fr; }
+      .about { grid-template-columns: 1fr; }
+      .about .photo { margin-bottom: 16px; }
+      .about h2 { font-size: 24px; }
     }
   </style>
 
@@ -233,13 +232,11 @@
 
   <section class="about">
     <div class="photo">фото</div>
-    <p class="who"><b>Астролог-консультант, а до этого – маркетинг, IT и обучение</b>Почти 20 лет помимо основных проектов в маркетинге и IT занимаюсь обучением и карьерой молодых людей. С 2010-х изучаю психологию.</p>
-    <ul class="facts">
-      <li><b>14 500</b>студентов прошли программу The Graduate, которую я разработал под эгидой Google</li>
-      <li><b>20 лет</b>в маркетинге, IT и обучении</li>
-      <li><b>2,5 года</b>обучения западной астрологии в школе Павла Андреева</li>
-      <li><b>2 года</b>консультирую открыто</li>
-    </ul>
+    <div class="text">
+      <h2>У меня две темы: дети и деньги</h2>
+      <p>Дети – моя личная тема, точка применения моих сил. Деньги и карьера – то, чем я занимаюсь почти 20 лет: проекты в маркетинге и IT, обучение студентов, консультации по карьере для выпускников школ.</p>
+      <p>С 2010-х я изучал психологию, потом 2,5 года учился западной астрологии в школе Павла Андреева. Сначала консультировал семью и друзей, потом друзей друзей, и вот уже два года консультирую открыто.</p>
+    </div>
   </section>
 
   <div class="blocks">
