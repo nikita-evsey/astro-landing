@@ -16,6 +16,8 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%237B2D3B'/%3E%3Ccircle cx='32' cy='32' r='11' fill='none' stroke='%23FAF7F1' stroke-width='4'/%3E%3C/svg%3E">
 
+<!-- Временно: выбор варианта фона ?p=1|2|3 -->
+<script>try{var _p=new URLSearchParams(location.search).get("p");if(_p)document.documentElement.className+=" p"+_p}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;600&family=Prata&display=swap" rel="stylesheet">
@@ -170,13 +172,19 @@
   .icon { color: var(--blue); }
   a { color: var(--ink); }
   .dark { background: var(--blue); color: var(--paper); position: relative; isolation: isolate; }
-  /* Фон-паттерн на светлом фоне: концентрические дуги из углов, как arcs на обложках; затухает вниз */
+  /* Фон-паттерн на светлом фоне – как на обложках постов (№1 arcs, №2 dial), затухает вниз.
+     Варианты для сравнения: ?p=1 (дуги), ?p=2 (шкала), ?p=3 (дуги + шкала); по умолчанию 1 */
   body { position: relative; }
-  body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1100px; z-index: -1; pointer-events: none; opacity: .07;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Cg fill='none' stroke='%2317191E' stroke-width='1.5'%3E%3Ccircle cx='600' cy='0' r='140'/%3E%3Ccircle cx='600' cy='0' r='240'/%3E%3Ccircle cx='600' cy='0' r='340'/%3E%3Ccircle cx='600' cy='0' r='440'/%3E%3Ccircle cx='600' cy='0' r='540'/%3E%3C/g%3E%3C/svg%3E") right top / 900px 900px no-repeat,
-                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Cg fill='none' stroke='%2317191E' stroke-width='1.5'%3E%3Ccircle cx='0' cy='600' r='140'/%3E%3Ccircle cx='0' cy='600' r='240'/%3E%3Ccircle cx='0' cy='600' r='340'/%3E%3Ccircle cx='0' cy='600' r='440'/%3E%3Ccircle cx='0' cy='600' r='540'/%3E%3C/g%3E%3C/svg%3E") left 220px / 700px 700px no-repeat;
-    -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
-  @media (max-width: 600px) { body::before { height: 800px; background-size: 520px 520px, 420px 420px; background-position: right top, left 300px; } }
+  body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1200px; z-index: -1; pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 1080'%3E%3Cg fill='none' stroke='%2317191E' stroke-width='3' stroke-opacity='.28'%3E%3Ccircle cx='1080' cy='0' r='252'/%3E%3Ccircle cx='1080' cy='0' r='432'/%3E%3Ccircle cx='1080' cy='0' r='612'/%3E%3Ccircle cx='1080' cy='0' r='792'/%3E%3C/g%3E%3C/svg%3E") right top / 1080px 1080px no-repeat;
+    -webkit-mask-image: linear-gradient(#000 50%, transparent); mask-image: linear-gradient(#000 50%, transparent); }
+  html.p2 body::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 1080'%3E%3Cg fill='none' stroke='%2317191E' stroke-width='3' stroke-opacity='.28'%3E%3Ccircle cx='540' cy='540' r='538'/%3E%3Ccircle cx='540' cy='540' r='432'/%3E%3Cline x1='1080' y1='540' x2='1048' y2='540'/%3E%3Cline x1='1062' y1='680' x2='1031' y2='671'/%3E%3Cline x1='1008' y1='810' x2='980' y2='794'/%3E%3Cline x1='922' y1='922' x2='899' y2='899'/%3E%3Cline x1='810' y1='1008' x2='794' y2='980'/%3E%3Cline x1='680' y1='1062' x2='671' y2='1031'/%3E%3Cline x1='540' y1='1080' x2='540' y2='1048'/%3E%3Cline x1='400' y1='1062' x2='409' y2='1031'/%3E%3Cline x1='270' y1='1008' x2='286' y2='980'/%3E%3Cline x1='158' y1='922' x2='181' y2='899'/%3E%3Cline x1='72' y1='810' x2='100' y2='794'/%3E%3Cline x1='18' y1='680' x2='49' y2='671'/%3E%3Cline x1='0' y1='540' x2='32' y2='540'/%3E%3Cline x1='18' y1='400' x2='49' y2='409'/%3E%3Cline x1='72' y1='270' x2='100' y2='286'/%3E%3Cline x1='158' y1='158' x2='181' y2='181'/%3E%3Cline x1='270' y1='72' x2='286' y2='100'/%3E%3Cline x1='400' y1='18' x2='409' y2='49'/%3E%3Cline x1='540' y1='0' x2='540' y2='32'/%3E%3Cline x1='680' y1='18' x2='671' y2='49'/%3E%3Cline x1='810' y1='72' x2='794' y2='100'/%3E%3Cline x1='922' y1='158' x2='899' y2='181'/%3E%3Cline x1='1008' y1='270' x2='980' y2='286'/%3E%3Cline x1='1062' y1='400' x2='1031' y2='409'/%3E%3C/g%3E%3C/svg%3E") right -380px top -300px / 1080px 1080px no-repeat; }
+  html.p3 body::before { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 1080'%3E%3Cg fill='none' stroke='%2317191E' stroke-width='3' stroke-opacity='.28'%3E%3Ccircle cx='1080' cy='0' r='252'/%3E%3Ccircle cx='1080' cy='0' r='432'/%3E%3Ccircle cx='1080' cy='0' r='612'/%3E%3Ccircle cx='1080' cy='0' r='792'/%3E%3C/g%3E%3C/svg%3E") right top / 1080px 1080px no-repeat, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1080 1080'%3E%3Cg fill='none' stroke='%2317191E' stroke-width='3' stroke-opacity='.28'%3E%3Ccircle cx='540' cy='540' r='538'/%3E%3Ccircle cx='540' cy='540' r='432'/%3E%3Cline x1='1080' y1='540' x2='1048' y2='540'/%3E%3Cline x1='1062' y1='680' x2='1031' y2='671'/%3E%3Cline x1='1008' y1='810' x2='980' y2='794'/%3E%3Cline x1='922' y1='922' x2='899' y2='899'/%3E%3Cline x1='810' y1='1008' x2='794' y2='980'/%3E%3Cline x1='680' y1='1062' x2='671' y2='1031'/%3E%3Cline x1='540' y1='1080' x2='540' y2='1048'/%3E%3Cline x1='400' y1='1062' x2='409' y2='1031'/%3E%3Cline x1='270' y1='1008' x2='286' y2='980'/%3E%3Cline x1='158' y1='922' x2='181' y2='899'/%3E%3Cline x1='72' y1='810' x2='100' y2='794'/%3E%3Cline x1='18' y1='680' x2='49' y2='671'/%3E%3Cline x1='0' y1='540' x2='32' y2='540'/%3E%3Cline x1='18' y1='400' x2='49' y2='409'/%3E%3Cline x1='72' y1='270' x2='100' y2='286'/%3E%3Cline x1='158' y1='158' x2='181' y2='181'/%3E%3Cline x1='270' y1='72' x2='286' y2='100'/%3E%3Cline x1='400' y1='18' x2='409' y2='49'/%3E%3Cline x1='540' y1='0' x2='540' y2='32'/%3E%3Cline x1='680' y1='18' x2='671' y2='49'/%3E%3Cline x1='810' y1='72' x2='794' y2='100'/%3E%3Cline x1='922' y1='158' x2='899' y2='181'/%3E%3Cline x1='1008' y1='270' x2='980' y2='286'/%3E%3Cline x1='1062' y1='400' x2='1031' y2='409'/%3E%3C/g%3E%3C/svg%3E") left -560px top 260px / 1080px 1080px no-repeat; }
+  @media (max-width: 600px) {
+    body::before { height: 900px; background-size: 640px 640px; }
+    html.p2 body::before { background-size: 640px 640px; background-position: right -260px top -200px; }
+    html.p3 body::before { background-size: 640px 640px, 640px 640px; background-position: right top, left -380px top 380px; }
+  }
   .dark a { color: var(--paper); text-decoration-color: rgba(250,247,241,.5); }
   .dark a:hover { color: #fff; }
 
