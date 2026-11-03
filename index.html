@@ -168,6 +168,7 @@
   h2::before { background: var(--blue); }
   li::marker { color: var(--blue); }
   .icon { color: var(--blue); }
+  a { color: var(--blue); }
 
   /* Шапка сайта (на рекламных дублях её нет: header: no во фрагменте) */
   .site { border-bottom: 1px solid var(--rule); background: var(--paper); }
@@ -176,8 +177,8 @@
   .brand svg { flex: none; }
   .site nav { display: flex; flex-wrap: wrap; gap: 4px 20px; font-size: 16px; }
   .site nav a { color: var(--ink); text-decoration: none; }
-  .site nav a:hover { color: var(--accent); }
-  .site nav a[aria-current] { color: var(--accent); font-weight: 600; }
+  .site nav a:hover { color: var(--blue); }
+  .site nav a[aria-current] { color: var(--blue); font-weight: 600; }
   .site + main { padding-top: 48px; }
 
   /* Цена рядом с кнопкой */
@@ -217,7 +218,7 @@
     .block h2 .icon { flex: none; }
     .about .more { display: inline-block; margin-top: 12px; }
     .block h2 a { color: var(--ink); text-decoration: none; }
-    .block h2 a:hover { color: var(--accent); }
+    .block h2 a:hover { color: var(--blue); }
     .block .what { color: var(--muted); margin: 0 0 18px; font-size: 17px; }
     .items { list-style: none; padding: 0; margin: 0 0 18px; border-top: 1px solid var(--rule); }
     .items li { display: flex; justify-content: space-between; gap: 16px; padding: 11px 0; margin: 0; border-bottom: 1px solid var(--rule); font-size: 17px; line-height: 1.4; }
