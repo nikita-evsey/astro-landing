@@ -242,6 +242,22 @@
 </div></header>
 <main>
 
+  <style>
+    .blocks { display: grid; gap: 18px; margin: 28px 0; }
+    .block { background: #fff; border: 1px solid var(--rule); border-radius: 14px; padding: 26px 28px 10px; }
+    .block h2 { margin: 0 0 6px; font-size: 28px; }
+    .block h2::before { display: none; }
+    .block .what { color: var(--muted); margin: 0 0 16px; font-size: 16px; line-height: 1.5; }
+    .items { list-style: none; padding: 0; margin: 0 0 12px; border-top: 1px solid var(--rule); }
+    .items li { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 0; margin: 0; border-bottom: 1px solid var(--rule); font-size: 17px; line-height: 1.4; }
+    .items li:last-child { border-bottom: 0; }
+    .items a { text-decoration: none; font-weight: 600; color: var(--ink); }
+    .items a:hover { text-decoration: underline; }
+    .items li small { display: block; font-weight: 400; color: var(--muted); font-size: 15px; margin-top: 2px; }
+    .items .price { white-space: nowrap; font-weight: 600; }
+    @media (max-width: 560px) { .block { padding: 22px 18px 6px; } .block h2 { font-size: 24px; } }
+  </style>
+
   <h1>Консультации о детях</h1>
   <p class="lead">Как гармонично вырастить конкретно вашего ребёнка, а не «ребенка» из книги.</p>
 
@@ -249,18 +265,23 @@
 
   <p>Выберите консультацию по возрасту ребёнка. Если сомневаетесь, напишите, я подберу нужный вариант.</p>
 
-  <h2>Экспресс-консультация</h2>
-  <ul>
-    <li><a href="/deti/express/">Экспресс-консультация для родителей детей до 12 лет</a> – <span class="price">$9</span></li>
-  </ul>
-
-  <h2>Подробные консультации</h2>
-  <ul>
-    <li><a href="/deti/deti-roditeli/">Детско-родительская консультация</a>, любой возраст – <span class="price">$399</span></li>
-    <li><a href="/deti/podrostki/">Подростковая консультация</a>, от 12–14 лет – <span class="price">$399</span></li>
-    <li><a href="/deti/beremennye/">Мягкая консультация для беременных</a> – <span class="price">$199</span></li>
-    <li><a href="/deti/planirovanie/">Консультация для тех, кто готовится забеременеть</a> – <span class="price">$399</span></li>
-  </ul>
+  <div class="blocks">
+    <section class="block">
+      <h2>Экспресс-консультация</h2>
+      <ul class="items">
+        <li><a href="/deti/express/">Экспресс-консультация<small>для родителей детей до 12 лет</small></a><span class="price">$9</span></li>
+      </ul>
+    </section>
+    <section class="block">
+      <h2>Подробные консультации</h2>
+      <ul class="items">
+        <li><a href="/deti/deti-roditeli/">Детско-родительская консультация<small>ребёнок и родители вместе, любой возраст</small></a><span class="price">$399</span></li>
+        <li><a href="/deti/podrostki/">Подростковая консультация<small>от 12–14 лет</small></a><span class="price">$399</span></li>
+        <li><a href="/deti/beremennye/">Мягкая консультация для беременных</a><span class="price">$199</span></li>
+        <li><a href="/deti/planirovanie/">Консультация для тех, кто готовится забеременеть</a><span class="price">$399</span></li>
+      </ul>
+    </section>
+  </div>
 
   <p>Во все консультации, кроме экспресс, в подарок входит <a href="/rekti/">ректификация времени рождения</a>.</p>
 
