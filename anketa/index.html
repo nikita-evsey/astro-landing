@@ -239,16 +239,19 @@
     .foot .btn { display: block; text-align: center; width: 100%; }
   }
 
-  .cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50; max-width: 560px; margin: 0 auto;
-    background: #FAF7F1; color: #1C2B4A; border: 1px solid rgba(28,43,74,.15); border-radius: 14px;
-    box-shadow: 0 6px 24px rgba(28,43,74,.12); padding: 14px 16px; font-size: 14px; line-height: 1.45; }
+  html.cookie-open, html.cookie-open body { overflow: hidden; }
+  .cookie { position: fixed; inset: 0; z-index: 1000; background: #1C2B4A; color: #FAF7F1;
+    display: flex; align-items: center; justify-content: center; padding: 24px 16px; overflow-y: auto; }
   .cookie[hidden] { display: none; }
-  .cookie p { margin: 0 0 10px; }
+  .cookie-in { max-width: 520px; width: 100%; text-align: center; }
+  .cookie-h { font-family: "Prata", Georgia, serif; font-size: 30px; line-height: 1.2; margin: 0 0 16px; }
+  .cookie p { font-size: 17px; line-height: 1.5; margin: 0 0 28px; }
   .cookie a { color: inherit; }
-  .cookie-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-  .cookie-btns button { flex: 1 1 140px; font: inherit; font-size: 14px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
-    background: transparent; color: #1C2B4A; border: 1px solid #1C2B4A; }
-  .cookie-btns button:hover { background: #1C2B4A; color: #FAF7F1; }
+  .cookie-yes { display: block; width: 100%; font: inherit; font-size: 20px; font-weight: 600; padding: 20px 24px; border-radius: 14px;
+    border: 0; background: #FAF7F1; color: #1C2B4A; cursor: pointer; }
+  .cookie-yes:hover, .cookie-yes:focus-visible { background: #fff; outline: 3px solid rgba(250,247,241,.5); outline-offset: 3px; }
+  .cookie-no { margin-top: 18px; font: inherit; font-size: 14px; background: none; border: 0; color: rgba(250,247,241,.75);
+    text-decoration: underline; cursor: pointer; padding: 6px; }
 </style>
 </head>
 <body>
