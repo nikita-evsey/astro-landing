@@ -331,7 +331,9 @@
         '<label for="pc-code">Код (латиница, цифры, дефис)</label><div class="inline"><input type="text" id="pc-code" autocomplete="off" autocapitalize="characters" placeholder="MAMA-20"><button class="ad-btn ghost" type="button" id="pc-gen">Придумать</button></div>' +
         '<label>Тип</label><label class="ad-check"><input type="radio" name="pc-kind" value="percent" checked> Скидка в %</label><label class="ad-check"><input type="radio" name="pc-kind" value="fixed"> Фиксированная цена, $</label>' +
         '<label for="pc-value" id="pc-value-l">Скидка, %</label><input type="number" id="pc-value" min="1" step="1" inputmode="decimal">' +
-        '<p class="ad-muted" id="pc-hint">На всю сумму: со срочностью и доплатой за детей.</p>' +
+        '<p class="ad-muted" id="pc-hint">На всю сумму, включая доплату за детей.</p>' +
+        '<label>Срочная</label><label class="ad-check"><input type="checkbox" id="pc-urgent"> Действует и на срочную (по той же цене / с той же скидкой)</label>' +
+        '<div id="pc-kids-wrap" hidden><label>Дети (детско-родительская)</label><label class="ad-check"><input type="checkbox" id="pc-kids" checked> Все дети в этой цене</label><p class="ad-muted">Если снять – второй и следующие дети по $149.</p></div>' +
         '<label>Консультации</label><label class="ad-check"><input type="checkbox" id="pc-all" checked> Все</label>' +
         '<div class="ad-products" id="pc-products" hidden>' + products.map(function (p) {
           return '<label class="ad-check"><input type="checkbox" value="' + esc(p.id) + '"> ' + esc(p.title) + '</label>';
@@ -343,6 +345,7 @@
       var list = d.promos.length ? d.promos.map(function (p) {
         return '<div class="ad-card' + (p.active ? "" : " off") + '"><div class="ad-row"><b>' + esc(p.code) + '</b><span>' + promoLabel(p) + '</span></div>' +
           '<div class="ad-muted">' + (p.products ? p.products.split(",").map(titleOf).map(esc).join("; ") : "Все консультации") +
+          ' · ' + (p.urgent_ok ? "обычная и срочная" : "только обычная") + (p.kind === "fixed" ? (p.kids_included ? ", все дети в цене" : ", доп. дети по $149") : "") +
           ' · оплат ' + p.used + (p.max_uses != null ? " из " + p.max_uses : "") + (p.expires_at ? " · до " + esc(p.expires_at) : "") + (p.active ? "" : " · выключен") + '</div>' +
           '<div>Оплачено: ' + p.paid_n + ' на ' + money(p.paid_sum) + ', скидка ' + money(p.discount_sum) + '</div>' +
           '<div class="ad-row" style="margin-top:8px"><button class="ad-btn ghost" data-copy="' + esc(p.code) + '">Скопировать ссылку</button>' +
@@ -356,7 +359,8 @@
       app.querySelectorAll('input[name="pc-kind"]').forEach(function (r) { r.onchange = function () {
         var fixed = app.querySelector('input[name="pc-kind"]:checked').value === "fixed";
         $("pc-value-l").textContent = fixed ? "Цена всего заказа, $" : "Скидка, %";
-        $("pc-hint").textContent = fixed ? "Итоговая цена всего заказа: обычная или срочная, сколько угодно детей. Клиент видит и полную цену без кода." : "На всю сумму: со срочностью и доплатой за детей.";
+        $("pc-hint").textContent = fixed ? "Итоговая цена заказа. Клиент видит и полную цену без кода." : "На всю сумму, включая доплату за детей.";
+        $("pc-kids-wrap").hidden = !fixed;
       }; });
       $("pc-all").onchange = function () { $("pc-products").hidden = this.checked; };
       $("pc-unl").onchange = function () { $("pc-uses").disabled = this.checked; };
@@ -369,6 +373,8 @@
           products: $("pc-all").checked ? [] : [].map.call($("pc-products").querySelectorAll("input:checked"), function (c) { return c.value; }),
           max_uses: $("pc-unl").checked ? null : $("pc-uses").value,
           expires_at: $("pc-until").value || null,
+          urgent_ok: $("pc-urgent").checked,
+          kids_included: $("pc-kids").checked,
         };
         if (!$("pc-all").checked && !body.products.length) { msg.className = "ad-msg err"; msg.textContent = "Отметьте хотя бы одну консультацию или «Все»."; return; }
         btn.disabled = true;
