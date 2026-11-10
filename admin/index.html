@@ -349,7 +349,8 @@
           ' · оплат ' + p.used + (p.max_uses != null ? " из " + p.max_uses : "") + (p.expires_at ? " · до " + esc(p.expires_at) : "") + (p.active ? "" : " · выключен") + '</div>' +
           '<div>Оплачено: ' + p.paid_n + ' на ' + money(p.paid_sum) + ', скидка ' + money(p.discount_sum) + '</div>' +
           '<div class="ad-row" style="margin-top:8px"><button class="ad-btn ghost" data-copy="' + esc(p.code) + '">Скопировать ссылку</button>' +
-          '<button class="ad-btn ghost" data-toggle="' + esc(p.code) + '" data-active="' + (p.active ? 0 : 1) + '">' + (p.active ? "Выключить" : "Включить") + '</button></div></div>';
+          '<span><button class="ad-btn ghost" data-toggle="' + esc(p.code) + '" data-active="' + (p.active ? 0 : 1) + '">' + (p.active ? "Выключить" : "Включить") + '</button>' +
+          (p.orders_n || p.used ? "" : ' <button class="ad-btn ghost" data-del="' + esc(p.code) + '">Удалить</button>') + '</span></div></div>';
       }).join("") : '<p class="ad-muted">Кодов пока нет.</p>';
 
       document.getElementById("ad-body").innerHTML = form + '<h2 class="ad-h">Все коды</h2>' + list;
@@ -387,6 +388,16 @@
         }, function (e) { msg.className = "ad-msg err"; msg.textContent = e.message; }).then(function () { btn.disabled = false; });
       };
       app.querySelectorAll("[data-copy]").forEach(function (b) { b.onclick = function () { copy(linkOf(b.dataset.copy), b); }; });
+      app.querySelectorAll("[data-del]").forEach(function (b) { b.onclick = function () {
+        var code = b.dataset.del;
+        var go = function (ok) {
+          if (!ok) return;
+          b.disabled = true;
+          api("/promos/delete", { code: code }).then(function () { return api("/promos"); }).then(renderPromos, function (e) { b.disabled = false; alert(e.message); });
+        };
+        var q = "Удалить код " + code + " совсем? Ссылка с ним перестанет работать.";
+        if (tgApp && tgApp.showConfirm) tgApp.showConfirm(q, go); else go(confirm(q));
+      }; });
       app.querySelectorAll("[data-toggle]").forEach(function (b) { b.onclick = function () {
         b.disabled = true;
         api("/promos/active", { code: b.dataset.toggle, active: b.dataset.active === "1" }).then(function () { return api("/promos"); }).then(renderPromos, fail);
