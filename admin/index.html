@@ -355,8 +355,8 @@
       $("pc-gen").onclick = function () { $("pc-code").value = genCode(); };
       app.querySelectorAll('input[name="pc-kind"]').forEach(function (r) { r.onchange = function () {
         var fixed = app.querySelector('input[name="pc-kind"]:checked').value === "fixed";
-        $("pc-value-l").textContent = fixed ? "Цена консультации, $" : "Скидка, %";
-        $("pc-hint").textContent = fixed ? "Вместо обычной цены – и для обычной, и для срочной. Доп. дети – по $149. Не дороже обычной цены." : "На всю сумму: со срочностью и доплатой за детей.";
+        $("pc-value-l").textContent = fixed ? "Цена всего заказа, $" : "Скидка, %";
+        $("pc-hint").textContent = fixed ? "Итоговая цена всего заказа: обычная или срочная, сколько угодно детей. Клиент видит и полную цену без кода." : "На всю сумму: со срочностью и доплатой за детей.";
       }; });
       $("pc-all").onchange = function () { $("pc-products").hidden = this.checked; };
       $("pc-unl").onchange = function () { $("pc-uses").disabled = this.checked; };
