@@ -335,7 +335,7 @@
     }
 
     // ---------- промокоды ----------
-    function promoLabel(p) { return p.kind === "percent" ? "−" + p.value + "%" : "цена " + money(p.value); }
+    function promoLabel(p) { if (p.kind === "free") return "pro bono"; return p.kind === "percent" ? "−" + p.value + "%" : "цена " + money(p.value); }
     function titleOf(id) { for (var i = 0; i < products.length; i++) if (products[i].id === id) return products[i].title; return id; }
     function genCode() { var a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", s = ""; for (var i = 0; i < 6; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
 
@@ -343,8 +343,8 @@
       products = d.products;
       var form = '<div class="ad-card ad-form"><b>Новый промокод</b>' +
         '<label for="pc-code">Код (латиница, цифры, дефис)</label><div class="inline"><input type="text" id="pc-code" autocomplete="off" autocapitalize="characters" placeholder="MAMA-20"><button class="ad-btn ghost" type="button" id="pc-gen">Придумать</button></div>' +
-        '<label>Тип</label><label class="ad-check"><input type="radio" name="pc-kind" value="percent" checked> Скидка в %</label><label class="ad-check"><input type="radio" name="pc-kind" value="fixed"> Фиксированная цена, $</label>' +
-        '<label for="pc-value" id="pc-value-l">Скидка, %</label><input type="number" id="pc-value" min="1" step="1" inputmode="decimal">' +
+        '<label>Тип</label><label class="ad-check"><input type="radio" name="pc-kind" value="percent" checked> Скидка в %</label><label class="ad-check"><input type="radio" name="pc-kind" value="fixed"> Фиксированная цена, $</label><label class="ad-check"><input type="radio" name="pc-kind" value="free"> Pro bono – бесплатно, без оплаты</label>' +
+        '<div id="pc-value-wrap"><label for="pc-value" id="pc-value-l">Скидка, %</label><input type="number" id="pc-value" min="1" step="1" inputmode="decimal"></div>' +
         '<p class="ad-muted" id="pc-hint">На всю сумму, включая доплату за детей.</p>' +
         '<label>Срочная</label><label class="ad-check"><input type="checkbox" id="pc-urgent"> Действует и на срочную (по той же цене / с той же скидкой)</label>' +
         '<div id="pc-kids-wrap" hidden><label>Дети (детско-родительская)</label><label class="ad-check"><input type="checkbox" id="pc-kids" checked> Все дети в этой цене</label><p class="ad-muted">Если снять – второй и следующие дети по $149.</p></div>' +
@@ -359,7 +359,7 @@
       var list = d.promos.length ? d.promos.map(function (p) {
         return '<div class="ad-card' + (p.active ? "" : " off") + '"><div class="ad-row"><b>' + esc(p.code) + '</b><span>' + promoLabel(p) + '</span></div>' +
           '<div class="ad-muted">' + (p.products ? p.products.split(",").map(titleOf).map(esc).join("; ") : "Все консультации") +
-          ' · ' + (p.urgent_ok ? "обычная и срочная" : "только обычная") + (p.kind === "fixed" ? (p.kids_included ? ", все дети в цене" : ", доп. дети по $149") : "") +
+          ' · ' + (p.urgent_ok ? "обычная и срочная" : "только обычная") + (p.kind === "fixed" ? (p.kids_included ? ", все дети в цене" : ", доп. дети по $149") : p.kind === "free" ? ", без оплаты" : "") +
           ' · оплат ' + p.used + (p.max_uses != null ? " из " + p.max_uses : "") + (p.expires_at ? " · до " + esc(p.expires_at) : "") + (p.active ? "" : " · выключен") + '</div>' +
           '<div>Оплачено: ' + p.paid_n + ' на ' + money(p.paid_sum) + ', скидка ' + money(p.discount_sum) + '</div>' +
           '<div class="ad-row" style="margin-top:8px"><button class="ad-btn ghost" data-copy="' + esc(p.code) + '">Скопировать ссылку</button>' +
@@ -372,9 +372,11 @@
       var $ = function (id) { return document.getElementById(id); };
       $("pc-gen").onclick = function () { $("pc-code").value = genCode(); };
       app.querySelectorAll('input[name="pc-kind"]').forEach(function (r) { r.onchange = function () {
-        var fixed = app.querySelector('input[name="pc-kind"]:checked').value === "fixed";
+        var kind = app.querySelector('input[name="pc-kind"]:checked').value, fixed = kind === "fixed";
+        $("pc-value-wrap").hidden = kind === "free";
         $("pc-value-l").textContent = fixed ? "Цена всего заказа, $" : "Скидка, %";
-        $("pc-hint").textContent = fixed ? "Итоговая цена заказа. Клиент видит и полную цену без кода." : "На всю сумму, включая доплату за детей.";
+        $("pc-hint").textContent = kind === "free" ? "Консультация бесплатно, все дети в цене. Счёта нет: после согласия с офертой человек сразу выбирает время." :
+          fixed ? "Итоговая цена заказа. Клиент видит и полную цену без кода." : "На всю сумму, включая доплату за детей.";
         $("pc-kids-wrap").hidden = !fixed;
       }; });
       $("pc-all").onchange = function () { $("pc-products").hidden = this.checked; };
