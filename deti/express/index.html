@@ -470,7 +470,12 @@
     var a = document.getElementById("cta");
     if (a) a.href = "https://t.me/" + BOT_USERNAME + "?start=" + START_PREFIX;
     window.dataLayer = window.dataLayer || [];
-    dataLayer.push({ event: "view_item", product: START_PREFIX, value: price, currency: "USD", event_id: "view-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8) });
+    // Формат электронной торговли GA4 (его же понимает Метрика). Название – заголовок страницы, раздел – первая часть адреса.
+    dataLayer.push({ ecommerce: null });
+    dataLayer.push({ event: "view_item", product: START_PREFIX, value: price, currency: "USD",
+      event_id: "view-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      ecommerce: { currency: "USD", value: price, items: [{ item_id: START_PREFIX, item_name: document.title.split(" – ")[0] || START_PREFIX,
+        item_category: location.pathname.split("/")[1] || "", price: price, quantity: 1 }] } });
   })();
 </script>
 <div class="cookie" id="cookie" hidden role="dialog" aria-modal="true" aria-labelledby="cookie-h">
