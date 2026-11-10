@@ -6,6 +6,13 @@
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
+  (function () {
+    var c = ""; try { c = localStorage.getItem("astro_consent") || ""; } catch (e) {}
+    var g = c === "all" ? "granted" : "denied";
+    gtag("consent", "default", { ad_storage: g, analytics_storage: g, ad_user_data: g, ad_personalization: g,
+      functionality_storage: "granted", security_storage: "granted", wait_for_update: 500 });
+    if (c) dataLayer.push({ event: "consent_ready", consent: c });
+  })();
   gtag('js', new Date());
 </script>
 <meta charset="utf-8">
@@ -245,6 +252,17 @@
     .foot .in { padding: 36px 16px 32px; }
     .foot .btn { display: block; text-align: center; width: 100%; }
   }
+
+  .cookie { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50; max-width: 560px; margin: 0 auto;
+    background: #FAF7F1; color: #1C2B4A; border: 1px solid rgba(28,43,74,.15); border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(28,43,74,.12); padding: 14px 16px; font-size: 14px; line-height: 1.45; }
+  .cookie[hidden] { display: none; }
+  .cookie p { margin: 0 0 10px; }
+  .cookie a { color: inherit; }
+  .cookie-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .cookie-btns button { flex: 1 1 140px; font: inherit; font-size: 14px; padding: 9px 12px; border-radius: 10px; cursor: pointer;
+    background: transparent; color: #1C2B4A; border: 1px solid #1C2B4A; }
+  .cookie-btns button:hover { background: #1C2B4A; color: #FAF7F1; }
 </style>
 </head>
 <body>
@@ -271,7 +289,7 @@
     <li><b>Данные анкет для консультации:</b> фамилия и имя, дата, время и место рождения, обстоятельства рождения – ваши и, если консультация о семье или паре, ваших детей, второго родителя, партнёра; важные события жизни с датами (в том числе переезды, браки, болезни, смерти близких); ваш запрос и вопросы к консультации.</li>
     <li><b>Запись на звонок:</b> выбранные дата и время, ссылка на видеозвонок.</li>
     <li><b>Данные об оплате:</b> номер заказа, факт, сумма и статус оплаты, возвраты. Данные банковских карт я не получаю и не храню – их обрабатывает платёжный сервис.</li>
-    <li><b>Технические:</b> метка страницы, с которой вы перешли в бот; журнал действий с анкетой (время открытия, сохранения и отправки, IP-адрес в необратимо зашифрованном виде) – для защиты от ошибок и чужого доступа; обезличенные данные о посещении сайта (cookie, тип устройства, источник перехода) – через системы аналитики.</li>
+    <li><b>Технические:</b> метка страницы, с которой вы перешли в бот; журнал действий с анкетой (время открытия, сохранения и отправки, IP-адрес в необратимо зашифрованном виде) – для защиты от ошибок и чужого доступа; обезличенные данные о посещении сайта (cookie, тип устройства, источник перехода) – через системы аналитики; при нажатии кнопки записи на сайте – номер перехода, рекламные метки ссылки (utm, fbclid), идентификаторы cookie аналитики и рекламы (если вы на них согласились), IP-адрес и тип браузера (IP и тип браузера стираются через 60 дней).</li>
   </ul>
   <p>Если вы заполняете анкету за ребёнка, второго родителя или партнёра, вы подтверждаете, что вправе передать их данные и что они знают об этом.</p>
   <p>Иногда в разговоре вы сами рассказываете о здоровье, отношениях или других чувствительных темах. Я использую эти сведения только для вашей консультации.</p>
@@ -297,7 +315,7 @@
     <li><b>lava.top</b> – приём оплаты и возвраты;</li>
     <li><b>GitHub Pages</b> – размещение сайта;</li>
     <li><b>облачное хранилище</b> – запись звонка, если вы её получаете;</li>
-    <li><b>системы аналитики и рекламы</b> на сайте – Google Tag Manager и подключённые через него сервисы (например, Google Analytics, Meta Pixel, Яндекс Метрика). На странице анкеты они не работают.</li>
+    <li><b>системы аналитики и рекламы</b> на сайте – Google Tag Manager и подключённые через него сервисы (например, Google Analytics, Meta Pixel, Яндекс Метрика). На странице анкеты они не работают. Если вы согласились на cookie аналитики и рекламы, бот передаёт в Google Analytics и Meta сведения о шагах записи: открытие бота, выбор консультации, выставление счёта, оплата (название консультации, сумма), запись на звонок, отправка анкеты – вместе с идентификаторами cookie, а email и номер чата Telegram – только в необратимо зашифрованном виде. Это нужно, чтобы понимать, какая реклама работает. Содержимое анкет никуда не передаётся.</li>
   </ul>
   <p>Серверы этих сервисов могут находиться за пределами Грузии, в том числе в ЕС и США. Данные могут быть раскрыты по законному требованию государственных органов.</p>
 
@@ -312,7 +330,7 @@
   <p>Вы можете узнать, какие данные о вас есть, исправить их, попросить удалить, ограничить обработку или отозвать согласие. Достаточно написать мне в Телеграме или на <a href="mailto:hello@astrotherapiest.com">hello@astrotherapiest.com</a>. Отвечаю в течение 30 дней.</p>
 
   <h2>8. Cookie</h2>
-  <p>Сайт использует cookie для работы аналитики и рекламы (через Google Tag Manager). Их можно отключить в настройках браузера – сайт продолжит работать. Страница анкеты cookie аналитики не использует.</p>
+  <p>Сайт использует cookie для работы аналитики и рекламы (через Google Tag Manager). При первом посещении вы выбираете в плашке внизу страницы: «Принять» или «Только необходимые». Без вашего согласия cookie аналитики и рекламы не используются. Изменить выбор можно ссылкой «Настройки cookie» внизу любой страницы или в настройках браузера – сайт продолжит работать. Страница анкеты cookie аналитики не использует.</p>
 
   <h2>9. Дети</h2>
   <p>Данные ребёнка для детской консультации передаёт родитель или иной законный представитель. Подростков на консультации я консультирую с согласия родителей.</p>
@@ -334,10 +352,31 @@
     <span>© 2026 Никита Евсей · astrotherapiest.com</span>
     <a href="/oferta/">Договор-оферта</a>
     <a href="/privacy/">Политика конфиденциальности</a>
+    <a href="#cookie" data-cookie-settings>Настройки cookie</a>
     <span>I.E. Nikita Evsey · ID 305518329 · Tbilisi, Georgia</span>
     <a href="mailto:hello@astrotherapiest.com">hello@astrotherapiest.com</a>
   </div>
 </div></footer>
 
+<div class="cookie" id="cookie" hidden role="region" aria-label="Cookie">
+  <p>Сайт использует cookie для аналитики и рекламы, чтобы понимать, что людям полезно. Подробнее – в <a href="/privacy/">политике конфиденциальности</a>.</p>
+  <div class="cookie-btns"><button type="button" data-c="all">Принять</button><button type="button" data-c="necessary">Только необходимые</button></div>
+</div>
+<script>
+  (function () {
+    var box = document.getElementById("cookie"), c = "";
+    try { c = localStorage.getItem("astro_consent") || ""; } catch (e) {}
+    if (!c) box.hidden = false;
+    function choose(v) {
+      try { localStorage.setItem("astro_consent", v); } catch (e) {}
+      var g = v === "all" ? "granted" : "denied";
+      gtag("consent", "update", { ad_storage: g, analytics_storage: g, ad_user_data: g, ad_personalization: g });
+      dataLayer.push({ event: "consent_update", consent: v });
+      box.hidden = true;
+    }
+    box.querySelectorAll("[data-c]").forEach(function (b) { b.onclick = function () { choose(b.getAttribute("data-c")); }; });
+    document.querySelectorAll("[data-cookie-settings]").forEach(function (a) { a.onclick = function (e) { e.preventDefault(); box.hidden = false; }; });
+  })();
+</script>
 </body>
 </html>
