@@ -387,11 +387,16 @@
   })();
 </script>
 <script>
-  /* Сквозная аналитика (2026-11-10): клик по любой ссылке на бота -> id клика (10 символов) в start (_k<id>),
-     сведения о визите -> бот (/click, sendBeacon), событие cta_click -> GTM (Lead / generate_lead / цель Метрики).
-     Метки рекламы запоминаются с первой страницы визита (sessionStorage). Telegram: в start до 64 символов, латиница, цифры, _ и -. */
+  /* Сквозная аналитика и электронная торговля GA4 (2026-11-10). Всё – в dataLayer, дальше GTM (GA4, Meta, Метрика).
+     - Раздел или главная со списком консультаций -> view_item_list; клик по консультации в списке -> select_item.
+     - Страница консультации -> view_item (со списком, из которого пришли).
+     - Клик по любой ссылке на бота -> button_zapisatsia + id клика (10 символов) в start (_k<id>) + сведения о визите боту (/click).
+     Метки рекламы запоминаются с первой страницы визита (sessionStorage). Telegram: в start до 64 символов, латиница, цифры, _ и -.
+     Товар = консультация: item_id = метка (prefix), цена – обычной консультации; срочность, скидки и промокоды – уже в боте. */
   (function () {
     var BOT = "astrotherapiest_bot", CLICK_API = "https://astrotherapiest-bot.nik-yevsey.workers.dev/click";
+    var CATALOG = {"/deti/express/": {"id": "express", "name": "Детская экспресс-консультация для родителей детей до 12 лет", "cat": "deti", "price": 9}, "/deti/deti-roditeli/": {"id": "deti-roditeli", "name": "Расширенная детско-родительская консультация", "cat": "deti", "price": 499}, "/deti/podrostki/": {"id": "podrostki", "name": "Подростковая консультация для родителей", "cat": "deti", "price": 399}, "/deti/beremennye/": {"id": "beremennye", "name": "Мягкая консультация для беременных", "cat": "deti", "price": 199}, "/deti/planirovanie/": {"id": "planirovanie", "name": "Консультация «Готовимся забеременеть»", "cat": "deti", "price": 399}, "/rekti/": {"id": "rekti", "name": "Ректификация времени рождения", "cat": "obshchie", "price": 79}, "/kto-ya/": {"id": "kto-ya", "name": "Консультация «Кто я»", "cat": "obshchie", "price": 399}, "/dengi/gde-moi-dengi/": {"id": "dengi-gde", "name": "Финансовая консультация «Где мои деньги»", "cat": "dengi", "price": 399}, "/dengi/naym/": {"id": "dengi-naym", "name": "Финансовая консультация для тех, кто в найме", "cat": "dengi", "price": 399}, "/dengi/predprinimateli/": {"id": "dengi-biz", "name": "Финансовая консультация для предпринимателей", "cat": "dengi", "price": 399}, "/dengi/eksperty/": {"id": "dengi-eksperty", "name": "Финансовая консультация для экспертов, фрилансеров, ремесленников", "cat": "dengi", "price": 399}, "/dengi/podrostki/": {"id": "dengi-podrostki", "name": "Профориентация для подростков – деньги и карьера", "cat": "dengi", "price": 399}, "/dengi/upakovka/": {"id": "dengi-upakovka", "name": "Упаковка личного бренда или продукта", "cat": "dengi", "price": 399}}, BRAND = "Никита Евсей";
+    var dl = window.dataLayer = window.dataLayer || [];
     function cookie(n) { var m = document.cookie.match(new RegExp("(?:^|; )" + n.replace(/[.$?*|{}()\[\]\\\/+^]/g, "\\$&") + "=([^;]*)")); return m ? decodeURIComponent(m[1]) : ""; }
     function rid() {
       var a = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", s = "", r = new Uint8Array(10);
@@ -399,14 +404,59 @@
       for (var i = 0; i < 10; i++) s += a[r[i] % 62];
       return s;
     }
+    function ss(k, v) { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || "null"); sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } }
+    function byId(id) { for (var p in CATALOG) if (CATALOG[p].id === id) return CATALOG[p]; return null; }
+    function item(c, extra) {
+      var it = { item_id: c.id, item_name: c.name, item_brand: BRAND, item_category: c.cat, item_variant: "обычная", price: c.price, quantity: 1 };
+      for (var k in extra || {}) if (extra[k] != null) it[k] = extra[k];
+      return it;
+    }
+    function ecom(event, ecommerce, more) {
+      dl.push({ ecommerce: null });
+      var o = { event: event, ecommerce: ecommerce };
+      for (var k in more || {}) o[k] = more[k];
+      dl.push(o);
+    }
+
+    // Источник визита.
     var q = new URLSearchParams(location.search), keys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbclid"], src = {};
-    var saved = {}; try { saved = JSON.parse(sessionStorage.getItem("astro_src") || "{}"); } catch (e) {}
+    var saved = ss("astro_src") || {};
     var fresh = keys.some(function (k) { return q.get(k); });
     if (fresh) { keys.forEach(function (k) { src[k] = q.get(k) || ""; }); src.at = Date.now(); }
     else { keys.forEach(function (k) { src[k] = saved[k] || ""; }); src.at = saved.at; }
     src.referrer = saved.referrer || document.referrer || "";
-    try { sessionStorage.setItem("astro_src", JSON.stringify(src)); } catch (e) {}
+    ss("astro_src", src);
 
+    // Страница консультации -> view_item.
+    var here = window.ASTRO_PRODUCT ? byId(window.ASTRO_PRODUCT) : null;
+    if (here) {
+      var from = ss("astro_list") || {};
+      var extra = from.id === here.id ? { item_list_id: from.list_id, item_list_name: from.list_name, index: from.index } : {};
+      ecom("view_item", { currency: "USD", value: here.price, items: [item(here, extra)] },
+        { product: here.id, value: here.price, currency: "USD", event_id: "view-" + rid() });
+    }
+
+    // Список консультаций на странице (раздел, главная) -> view_item_list; клик -> select_item.
+    var listId = (location.pathname.replace(/^\/|\/$/g, "") || "home").replace(/[^a-z0-9]+/gi, "_");
+    var listName = document.title;
+    var seen = {}, listed = [];
+    Array.prototype.forEach.call(document.querySelectorAll("main a[href]"), function (a) {
+      var u; try { u = new URL(a.href, location.href); } catch (e) { return; }
+      var c = u.origin === location.origin ? CATALOG[u.pathname.replace(/\/?$/, "/")] : null;
+      if (!c || c === here || seen[c.id]) return;
+      seen[c.id] = true;
+      var li = a.closest("li"), pe = li && li.querySelector(".price");
+      var price = pe ? parseFloat(pe.textContent.replace(/[^0-9.]/g, "")) || c.price : c.price;
+      var it = item(c, { price: price, index: listed.length + 1, item_list_id: listId, item_list_name: listName });
+      listed.push(it);
+      a.addEventListener("click", function () {
+        ss("astro_list", { id: c.id, list_id: listId, list_name: listName, index: it.index });
+        ecom("select_item", { item_list_id: listId, item_list_name: listName, items: [it] }, { product: c.id });
+      });
+    });
+    if (listed.length) ecom("view_item_list", { item_list_id: listId, item_list_name: listName, items: listed });
+
+    // Ссылка на бота -> button_zapisatsia + id клика.
     document.addEventListener("click", function (e) {
       var a = e.target.closest && e.target.closest("a[href]");
       if (!a) return;
@@ -415,7 +465,7 @@
       var base = (a.getAttribute("data-start") || u.searchParams.get("start") || "site").replace(/_k[A-Za-z0-9]{10}$/, "");
       a.setAttribute("data-start", base);
       var id = rid();
-      u.searchParams.set("start", (base.slice(0, 51) + "_k" + id));
+      u.searchParams.set("start", base.slice(0, 51) + "_k" + id);
       a.href = u.toString();
       var c = ""; try { c = localStorage.getItem("astro_consent") || ""; } catch (x) {}
       var gs = "";                                                    // _ga_<поток>: GS1.1.<sid>.… или GS2.1.s<sid>$…
@@ -428,15 +478,14 @@
       if (!fbc && src.fbclid) fbc = "fb.1." + (src.at || Date.now()) + "." + src.fbclid;
       var place = a.id === "cta" ? "cta" : (a.closest("footer") ? "footer" : "link");
       var data = {
-        id: id, product: window.ASTRO_PRODUCT || null, page: location.origin + location.pathname, referrer: src.referrer, place: place,
+        id: id, product: here ? here.id : null, page: location.origin + location.pathname, referrer: src.referrer, place: place,
         utm_source: src.utm_source, utm_medium: src.utm_medium, utm_campaign: src.utm_campaign, utm_content: src.utm_content, utm_term: src.utm_term,
         fbclid: src.fbclid, fbc: fbc, fbp: cookie("_fbp"), ga_cid: cookie("_ga").split(".").slice(2).join("."), ga_sid: gs, ym_cid: cookie("_ym_uid"),
         consent_ad: c === "all", consent_an: c === "all"
       };
       try { navigator.sendBeacon(CLICK_API, new Blob([JSON.stringify(data)], { type: "text/plain" })); } catch (x) {}
-      window.dataLayer = window.dataLayer || [];
-      dataLayer.push({ event: "cta_click", product: window.ASTRO_PRODUCT || null, value: window.ASTRO_PRICE || null, currency: "USD",
-        click_id: id, event_id: "lead-" + id, campaign: src.utm_campaign || null, place: place });
+      dl.push({ event: "button_zapisatsia", product: here ? here.id : null, value: here ? here.price : null, currency: "USD",
+        click_id: id, event_id: "zap-" + id, campaign: src.utm_campaign || null, place: place });
     }, true);
   })();
 </script>
