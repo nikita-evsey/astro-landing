@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="ru">
 <head>
+<!-- Google Tag Manager -->
+<script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K64TSWHN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Подростковая консультация для родителей</title>
@@ -370,7 +377,7 @@
 
   <div class="cta-block">
     <div class="cta-price">$399<small>за консультацию</small></div>
-    <a class="cta" id="cta" href="https://t.me/YOUR_BOT">Записаться в Телеграме&nbsp;→</a>
+    <a class="cta" id="cta" href="https://t.me/astrotherapiest_bot">Записаться в Телеграме&nbsp;→</a>
   </div>
 
   <p class="note">Если астрология не вписывается в вашу картину мира – это нормально, на свете есть много других источников информации, к которым можно обращаться.</p>
@@ -382,9 +389,9 @@
 <footer class="foot dark"><div class="in">
   <div class="row">
     <div class="name">Никита Евсей<small>Астрологические консультации о детях и деньгах</small></div>
-    <a class="btn" href="https://t.me/YOUR_BOT?start=podrostki_footer">Записаться в Телеграме&nbsp;→</a>
+    <a class="btn" href="https://t.me/astrotherapiest_bot?start=podrostki_footer">Записаться в Телеграме&nbsp;→</a>
   </div>
-  <div class="social"><a href="https://instagram.com/razreshite.razrushit" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a><a href="https://www.youtube.com/@NikitaEvseyAstrologer" aria-label="YouTube"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" stroke="none"/></svg></a><a href="https://t.me/YOUR_BOT?start=podrostki_footer" aria-label="Telegram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M21 4 3 11l6 2.2M21 4l-3 16-9-6.8M21 4 9 13.2V19l3.2-3.4"/></svg></a></div>
+  <div class="social"><a href="https://instagram.com/razreshite.razrushit" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a><a href="https://www.youtube.com/@NikitaEvseyAstrologer" aria-label="YouTube"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10 9.2v5.6l4.8-2.8z" fill="currentColor" stroke="none"/></svg></a><a href="https://t.me/astrotherapiest_bot?start=podrostki_footer" aria-label="Telegram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M21 4 3 11l6 2.2M21 4l-3 16-9-6.8M21 4 9 13.2V19l3.2-3.4"/></svg></a></div>
   <nav><a href="/deti/">Дети</a><a href="/dengi/">Деньги</a><a href="/rekti/">Ректификация</a><a href="/obo-mne/">Обо мне</a><a href="/deti/koleso/">«Колесо»</a></nav>
   <div class="legal">
     <span>© 2026 Никита Евсей · astrotherapiest.com</span>
@@ -397,7 +404,7 @@
 
 <script>
   /* ===== Настройки ===== */
-  var BOT_USERNAME = "YOUR_BOT";      // имя бота без @
+  var BOT_USERNAME = "astrotherapiest_bot";      // имя бота без @
   var START_PREFIX = "podrostki";          // метка лендинга для бота
 
   /* Передаём метку в бота: t.me/bot?start=podrostki_<utm_campaign>
@@ -411,6 +418,9 @@
       var a = document.getElementById("cta");
       a.href = "https://t.me/" + BOT_USERNAME + "?start=" + start;
       a.addEventListener("click", function () {
+        // GTM: событие для триггера «клик по кнопке записи» (продукт = метка страницы).
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "cta_click", product: START_PREFIX, campaign: tag || null });
         if (typeof fbq === "function") fbq("track", "Lead");
         if (typeof ym === "function" && window.YM_ID) ym(window.YM_ID, "reachGoal", "cta_click");
       });
