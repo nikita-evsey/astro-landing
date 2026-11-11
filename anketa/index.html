@@ -990,28 +990,56 @@
           badge(mx, y, u);
           if (yr) label(mx, y - 12, shortYears(u), lcls);
         });
-        // Дети: от середины линии брака родителей; у каждой пары своя высота горизонтали, чтобы линии разных пар не сливались.
+        // Дети: от середины линии брака родителей (или от карточки одного родителя) – общей «шиной»: спуск, горизонталь, отводы к детям.
         // Отчим / мачеха – без линии к детям (связь видна через брак с мамой / папой).
-        var bus = {}, busN = {};
-        function busY(key, top, bottom) {
-          if (bus[key] == null) { var r = Math.round(top); busN[r] = (busN[r] || 0) + 1; bus[key] = busN[r]; }
-          var k = bus[key], gap = bottom - top;
-          return top + Math.min(gap - 6, 10 + (k - 1) * 7);
-        }
+        // Высоты горизонталей в ряду подбираются так, чтобы линии не пересекались: если спуск одной пары попадает
+        // в пролёт другой – горизонталь этой пары выше (решение Никиты 2026-11-11: «чтобы линии не пересекались, так чище»).
+        var groups = {};
         P.forEach(function (c) {
           var cp = pos(c.id); if (!cp) return;
           var ps = parentsOf(c).slice(), done = {};
           for (var i = 0; i < ps.length; i++) for (var j = i + 1; j < ps.length; j++) {
             var u = unionOf(ps[i], ps[j]); if (!u || !umid[u.id] || done[ps[i]] || done[ps[j]]) continue;
-            var mm = umid[u.id], midY = busY("u" + u.id, mm.b, cp.t);
-            path("M" + mm.x + " " + mm.y + " V" + midY + " H" + cp.x + " V" + cp.t, "ln" + (bold[c.id + "|" + ps[i]] || bold[c.id + "|" + ps[j]] ? " bold" : ""));
+            var key = "u" + u.id;
+            groups[key] = groups[key] || { x: umid[u.id].x, y: umid[u.id].y, b: umid[u.id].b, kids: [] };
+            groups[key].kids.push({ c: c, cp: cp, bold: bold[c.id + "|" + ps[i]] || bold[c.id + "|" + ps[j]] });
             done[ps[i]] = done[ps[j]] = true;
           }
           ps.forEach(function (pid) {
             if (done[pid]) return;
             var pp = pos(pid), par = byId(pid); if (!pp || (par && par.step)) return;
-            var midY = busY("p" + pid, pp.b, cp.t);
-            path("M" + pp.x + " " + pp.b + " V" + midY + " H" + cp.x + " V" + cp.t, "ln" + (par && par.step ? " step" : "") + (bold[c.id + "|" + pid] ? " bold" : ""));
+            var key = "p" + pid;
+            groups[key] = groups[key] || { x: pp.x, y: pp.b, b: pp.b, kids: [] };
+            groups[key].kids.push({ c: c, cp: cp, bold: bold[c.id + "|" + pid] });
+          });
+        });
+        // По рядам родителей: пролёт шины и порядок высот.
+        var rows2 = {};
+        Object.keys(groups).forEach(function (k) {
+          var g = groups[k], xs = g.kids.map(function (q) { return q.cp.x; }).concat([g.x]);
+          g.lo = Math.min.apply(null, xs); g.hi = Math.max.apply(null, xs);
+          g.top = Math.min.apply(null, g.kids.map(function (q) { return q.cp.t; }));
+          var r = Math.round(g.b / 10); (rows2[r] = rows2[r] || []).push(g);
+        });
+        Object.keys(rows2).forEach(function (r) {
+          var list = rows2[r], level = [];
+          // A выше B, если спуск A внутри пролёта B (иначе спуск A пересёк бы горизонталь B).
+          var above = function (a, b) { return a.x > b.lo + 1 && a.x < b.hi - 1; };
+          var placed = [];
+          while (placed.length < list.length) {
+            var next = list.filter(function (g) { return placed.indexOf(g) < 0 && !list.some(function (h) { return h !== g && placed.indexOf(h) < 0 && above(h, g); }); });
+            if (!next.length) next = list.filter(function (g) { return placed.indexOf(g) < 0; }).slice(0, 1);   // цикл – как есть
+            next.sort(function (a, b) { return (a.hi - a.lo) - (b.hi - b.lo); });
+            next.forEach(function (g) { g.lvl = placed.length; placed.push(g); });
+          }
+          list.forEach(function (g) { var gap = g.top - g.b; g.busY = g.b + Math.min(gap - 6, 10 + g.lvl * 7); });
+        });
+        Object.keys(groups).forEach(function (k) {
+          var g = groups[k];
+          path("M" + g.x + " " + g.y + " V" + g.busY + " H" + g.lo + " M" + g.x + " " + g.busY + " H" + g.hi, "ln");
+          g.kids.forEach(function (q) {
+            path("M" + q.cp.x + " " + g.busY + " V" + q.cp.t, "ln");
+            if (q.bold) path("M" + g.x + " " + g.y + " V" + g.busY + " H" + q.cp.x + " V" + q.cp.t, "ln bold");
           });
         });
         stage.insertBefore(svg, stage.firstChild);
