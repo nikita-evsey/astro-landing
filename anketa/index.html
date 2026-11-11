@@ -738,11 +738,13 @@
       ["mother", "мать"], ["father", "отец"], ["stepmother", "мачеха"], ["stepfather", "отчим"],
       ["brother", "брат"], ["sister", "сестра"], ["halfbrother", "сводный брат"], ["halfsister", "сводная сестра"],
       ["partner", "супруг(а) / партнёр"], ["son", "сын"], ["daughter", "дочь"],
+      ["adoptson", "приёмный сын"], ["adoptdaughter", "приёмная дочь"],
     ];
     var REL_ME = { mother: "Мама", father: "Папа", stepmother: "Мачеха", stepfather: "Отчим", brother: "Брат", sister: "Сестра",
-      halfbrother: "Сводный брат", halfsister: "Сводная сестра", partner: "Супруг(а)", son: "Сын", daughter: "Дочь" };
+      halfbrother: "Сводный брат", halfsister: "Сводная сестра", partner: "Супруг(а)", son: "Сын", daughter: "Дочь",
+      adoptson: "Приёмный сын", adoptdaughter: "Приёмная дочь" };
     var REL_SUGGEST = ["Мама", "Папа", "Отчим", "Мачеха", "Брат", "Сестра", "Сводный брат", "Сводная сестра", "Муж", "Жена", "Бывший муж", "Бывшая жена", "Партнёр",
-      "Сын", "Дочь", "Бабушка по маме", "Дедушка по маме", "Бабушка по папе", "Дедушка по папе", "Тётя по маме", "Дядя по маме", "Тётя по папе", "Дядя по папе",
+      "Сын", "Дочь", "Приёмный сын", "Приёмная дочь", "Бабушка по маме", "Дедушка по маме", "Бабушка по папе", "Дедушка по папе", "Тётя по маме", "Дядя по маме", "Тётя по папе", "Дядя по папе",
       "Прабабушка", "Прадедушка", "Двоюродный брат", "Двоюродная сестра", "Крёстная", "Крёстный"];
     var GEN_NAME = { 3: "Прабабушки и прадедушки", 2: "Бабушки и дедушки", 1: "Родители", 0: "Поколение", "-1": "Дети", "-2": "Внуки" };
     var U_KIND = [["marriage", "брак"], ["civil", "гражданский брак"], ["relationship", "отношения"]];
@@ -1044,7 +1046,7 @@
           else path("M" + g.x + " " + g.y + " V" + g.busY, "ln");
           path("M" + g.lo + " " + g.busY + " H" + g.hi, "ln");
           g.kids.forEach(function (q) {
-            path("M" + q.ax + " " + g.busY + " V" + q.cp.t, "ln");
+            path("M" + q.ax + " " + g.busY + " V" + q.cp.t, q.c.adopted ? "ln step" : "ln");   // приёмный – пунктир
             if (q.bold) path("M" + (g.drops && g.drops.length > 1 ? g.drops[0].x + " " + g.drops[0].y : g.x + " " + g.y) + " V" + g.busY + " H" + q.ax + " V" + q.cp.t, "ln bold");
           });
         });
@@ -1063,7 +1065,10 @@
         } else if (kind === "brother" || kind === "sister") { delete p.sib; p.same = x.same || x.id; }
         else if (kind === "halfbrother" || kind === "halfsister") { delete p.same; p.sib = x.same || x.id; }
         else if (kind === "partner") addUnion(x.id, p.id);
-        else if (arr(p, "parents").indexOf(x.id) < 0) p.parents.push(x.id);
+        else {
+          if (arr(p, "parents").indexOf(x.id) < 0) p.parents.push(x.id);
+          if (kind.indexOf("adopt") === 0) p.adopted = true; else delete p.adopted;   // приёмный ребёнок – пунктир к родителям
+        }
         if (!String(p.rel || "").trim()) p.rel = relFor(kind, x);
         changed(); draw(); showPanel();
       }
@@ -1083,6 +1088,7 @@
           P.push(p); addUnion(x.id, id); P.pop();
         } else {
           p.parents.push(x.id);
+          if (kind.indexOf("adopt") === 0) p.adopted = true;
           var partner = u ? other(u, x.id) : null;
           if (!partner) { var cur = unionsOf(x.id).filter(function (q) { return !q.end_kind; }); if (cur.length === 1) partner = other(cur[0], x.id); }
           if (partner) p.parents.push(partner);
@@ -1207,7 +1213,7 @@
         // Родственные связи (кроме браков – они выше) – каждую можно убрать (×).
         var links = [];
         arr(p, "parents").forEach(function (pid) { links.push(["родитель: " + nm(byId(pid)), function () { p.parents = p.parents.filter(function (x) { return x !== pid; }); }]); });
-        P.forEach(function (o) { if (arr(o, "parents").indexOf(p.id) >= 0) links.push(["ребёнок: " + nm(o), function () { o.parents = o.parents.filter(function (x) { return x !== p.id; }); }]); });
+        P.forEach(function (o) { if (arr(o, "parents").indexOf(p.id) >= 0) links.push([(o.adopted ? "приёмный ребёнок: " : "ребёнок: ") + nm(o), function () { o.parents = o.parents.filter(function (x) { return x !== p.id; }); }]); });
         if (p.same) links.push(["брат / сестра (те же родители): " + nm(byId(p.same)), function () { delete p.same; }]);
         if (p.sib) links.push(["сводный(ая): " + nm(byId(p.sib)), function () { delete p.sib; }]);
         P.forEach(function (o) { if (o.same === p.id || o.sib === p.id) links.push([(o.same ? "брат / сестра: " : "сводный(ая): ") + nm(o), function () { if (o.same === p.id) { o.parents = parentsOf(p).slice(); delete o.same; } else delete o.sib; }]); });
