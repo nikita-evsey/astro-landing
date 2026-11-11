@@ -265,6 +265,8 @@
     .ak-muted { color: var(--muted); font-size: 16px; }
     .ak-card { background: var(--box); border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
     .ak-admin { border: 2px dashed var(--accent); }
+    .ak-login { margin-top: 40px; font-size: 14px; }
+    .ak-login .ak-link { font-size: 14px; opacity: .6; }
     .ak-admin label { display: block; margin-top: 14px; font-weight: 600; }
     .ak-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
     .ak-badge { font-size: 14px; padding: 2px 10px; border-radius: 99px; background: #e4ded2; color: var(--ink); white-space: nowrap; }
@@ -303,6 +305,9 @@
     var root = document.getElementById("ak");
     var token = new URLSearchParams(location.search).get("t") || "";
     var akey = new URLSearchParams(location.search).get("k") || "";  // ссылка Никиты: вопросы клиента и заметки только для него
+    // Вход Никиты через Telegram: сессия (30 дней) хранится в этом браузере и действует для всех анкет.
+    function sessGet() { try { return localStorage.getItem("astro_admin_s") || ""; } catch (e) { return ""; } }
+    function sessSet(v) { try { if (v) localStorage.setItem("astro_admin_s", v); else localStorage.removeItem("astro_admin_s"); } catch (e) {} }
     var state = { cab: null, item: null, data: null, timer: null, dirty: false, saving: false };
 
     function el(tag, attrs, kids) {
@@ -318,8 +323,9 @@
     }
     function clear() { while (root.firstChild) root.removeChild(root.firstChild); }
     function api(path, body) {
-      var url = API + path + (path.indexOf("?") < 0 ? "?" : "&") + "t=" + encodeURIComponent(token) + (akey ? "&k=" + encodeURIComponent(akey) : "");
-      return fetch(url, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ t: token, k: akey || undefined }, body)) } : {})
+      var sess = sessGet();
+      var url = API + path + (path.indexOf("?") < 0 ? "?" : "&") + "t=" + encodeURIComponent(token) + (akey ? "&k=" + encodeURIComponent(akey) : "") + (sess ? "&s=" + encodeURIComponent(sess) : "");
+      return fetch(url, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.assign({ t: token, k: akey || undefined, s: sess || undefined }, body)) } : {})
         .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || "Ошибка"); return j; }); });
     }
     function fail(msg) { clear(); root.appendChild(el("h1", { text: "Анкета перед консультацией" })); root.appendChild(el("p", { class: "ak-err", text: msg })); }
@@ -359,6 +365,30 @@
           .then(function () { btn.disabled = false; });
       } });
       box.appendChild(el("p", { style: "display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px" }, [btn, msg]));
+      if (sessGet() && !akey) box.appendChild(el("button", { class: "ak-link", text: "Выйти (на этом устройстве)", onclick: function () { sessSet(""); showCabinet(); } }));
+      return box;
+    }
+
+    // Вход для Никиты: Telegram Login Widget (домен сайта привязан к боту в @BotFather -> /setdomain).
+    function loginLink() {
+      var box = el("div", { class: "ak-login" });
+      var a = el("button", { class: "ak-link ak-muted", text: "Вход для Никиты", onclick: function () {
+        box.removeChild(a);
+        var msg = el("div", { class: "ak-hint" });
+        window.onTgAuth = function (user) {
+          msg.textContent = "Проверяю…";
+          api("/login", { tg: user }).then(function (r) { sessSet(r.s); showCabinet(); })
+            .catch(function (e) { msg.textContent = e.message; });
+        };
+        var sc = document.createElement("script");
+        sc.async = true; sc.src = "https://telegram.org/js/telegram-widget.js?22";
+        sc.setAttribute("data-telegram-login", "astrotherapiest_bot");
+        sc.setAttribute("data-size", "medium");
+        sc.setAttribute("data-userpic", "false");
+        sc.setAttribute("data-onauth", "onTgAuth(user)");
+        box.appendChild(sc); box.appendChild(msg);
+      } });
+      box.appendChild(a);
       return box;
     }
 
@@ -393,8 +423,10 @@
             api("/add", {}).then(function (r) { openItem(r.id); }).catch(function (e) { alert(e.message); });
           } }));
         }
+        // Никита видит то же, что клиент, и ниже – свой блок.
+        root.appendChild(el("p", { class: "ak-muted", text: "Вопросы – в боте @astrotherapiest_bot. Данные анкеты видит только Никита." }));
         if (cab.admin) root.appendChild(adminCard(cab.admin));
-        else root.appendChild(el("p", { class: "ak-muted", text: "Вопросы – в боте @astrotherapiest_bot. Данные анкеты видит только Никита." }));
+        else root.appendChild(loginLink());
       }).catch(function (e) { fail(e.message); });
     }
 
