@@ -1005,7 +1005,19 @@
       // Всё второстепенное – наружу от своей стороны: сначала супруги (текущие ближе, бывшие дальше), дальше братья и сёстры, сводные,
       // их семьи. Ряд натива: рядом супруг(а), братья и сёстры по бокам (сёстры слева, братья справа), мамины сводные – слева, папины – справа.
       // Ниже – дети под своей парой родителей, по году рождения.
+      // Бабушки и дедушки (и все предки выше) по умолчанию в браке (решение Никиты 2026-11-12): если у родителя натива (или предка выше)
+      // указаны оба родителя, а союза между ними нет – добавляем брак без дат. Его можно поправить (развод, годы) в карточке.
+      function autoMarry() {
+        var seen = {}, q = bloodParents("me").slice();
+        while (q.length) {
+          var a = q.shift(); if (seen[a]) continue; seen[a] = true;
+          var ps = bloodParents(a);
+          if (ps.length === 2 && !unionOf(ps[0], ps[1])) U.push({ id: newUid(), a: ps[0], b: ps[1], kind: "marriage", start: {}, end: {}, end_kind: "" });
+          ps.forEach(function (p) { q.push(p); });
+        }
+      }
       function layout() {
+        autoMarry();
         var CS = coreSet(), core = CS.core, show = {}, gen = {}, x = {}, side = {}, ped = {}, pedRow = {};
         if (sel && mode === "core" && !core[sel] && byId(sel) && linked(byId(sel))) mode = "ext";   // открыли второстепенного – показываем всё
         P.forEach(function (p) { if (mode === "ext" || core[p.id]) show[p.id] = true; });
