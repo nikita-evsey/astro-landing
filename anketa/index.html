@@ -593,7 +593,7 @@
       }
       // Поле видно, только если заполнено другое (showIf).
       if (f.showIf) {
-        var sync = function () { wrap.hidden = !String(holder[f.showIf] || "").trim(); };
+        var sync = function () { wrap.hidden = f.showIf === "@married" ? !hasMarriage("me") : !String(holder[f.showIf] || "").trim(); };
         state.showIf.push(sync); sync();
       }
       return wrap;
@@ -753,6 +753,12 @@
       return REL_ME[kind] + (r || pname(x) ? " – " + (r || pname(x)).toLowerCase() : "");
     }
 
+    // Есть ли у человека брак в древе (только «брак»: гражданский брак и отношения фамилию не меняют).
+    function hasMarriage(id) {
+      var U = state.data && state.data.tree && state.data.tree.unions || [];
+      return U.some(function (u) { return (u.a === id || u.b === id) && (u.kind || "marriage") === "marriage"; });
+    }
+
     function pname(d) {
       var b = [d.first || d.first_name, d.last || d.last_name].filter(function (x) { return String(x || "").trim(); }).join(" ");
       return b || String(d.name || "").trim();
@@ -866,9 +872,9 @@
       wrap.appendChild(stage); box.appendChild(wrap); box.appendChild(panel);
 
       function cardText(p) {
-        if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: pname(state.data) || it.label, married: state.data.married_name || "",
+        if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: pname(state.data) || it.label, married: hasMarriage("me") ? state.data.married_name || "" : "",
           born: state.data.birth_date ? "р. " + state.data.birth_date.split("-").reverse().join(".") : "", bplace: state.data.birth_place || "" };
-        return { rel: p.rel || "Кто?", name: pname(p), married: p.married || "", born: fmtParts(p.birth) ? "р. " + fmtParts(p.birth) : "", bplace: p.place || "",
+        return { rel: p.rel || "Кто?", name: pname(p), married: hasMarriage(p.id) ? p.married || "" : "", born: fmtParts(p.birth) ? "р. " + fmtParts(p.birth) : "", bplace: p.place || "",
           died: fmtParts(p.death) ? "† " + fmtParts(p.death) : (p.dead ? "† дата неизвестна" : ""), dplace: p.death_place || "" };
       }
       function nm(o) { if (!o) return "?"; var t = cardText(o); return o.id === "me" ? (t.name || "натив") : t.rel + (t.name ? " " + t.name : ""); }
@@ -1025,7 +1031,7 @@
         us.forEach(function (u) {
           var o = byId(other(u, p.id)), kids = kidsOf(u);
           var kSel = el("select", {}, U_KIND.map(function (k) { return el("option", { value: k[0], text: k[1] }); })); kSel.value = u.kind || "marriage"; kSel.disabled = ro;
-          kSel.onchange = function () { u.kind = kSel.value; changed(); draw(); };
+          kSel.onchange = function () { u.kind = kSel.value; changed(); draw(); showPanel(); };
           var eSel = el("select", {}, U_END.map(function (k) { return el("option", { value: k[0], text: k[1] }); })); eSel.value = u.end_kind || ""; eSel.disabled = ro;
           eSel.onchange = function () { u.end_kind = eSel.value; if (!u.end_kind) u.end = {}; changed(); draw(); showPanel(); };
           var row = el("div", { class: "ak-union" + (former(u) ? " former" : "") }, [
@@ -1062,9 +1068,9 @@
         panel.appendChild(head);
         if (p.id !== "me") {
           var grid = el("div", { class: "ak-form ak-tree-fields" });
-          [["rel", "Кем приходится", "text", REL_SUGGEST], ["first", "Имя", "text"], ["last", "Фамилия", "text"], ["married", "Фамилия после замужества", "text"],
+          [["rel", "Кем приходится", "text", REL_SUGGEST], ["first", "Имя", "text"], ["last", "Фамилия", "text"]].concat(hasMarriage(p.id) ? [["married", "Фамилия после замужества", "text"]] : []).concat([
            ["birth", "Дата рождения", "date3"], ["time", "Время рождения", "time"], ["place", "Место рождения", "text"],
-           ["death", "Дата смерти", "date3"], ["death_place", "Место смерти", "text"]].forEach(function (d) {
+           ["death", "Дата смерти", "date3"], ["death_place", "Место смерти", "text"]]).forEach(function (d) {
             var w = el("div", { class: "fld" + (d[2] === "date3" ? " d3cell" : "") }), inp;
             if (d[2] === "date3") inp = dateInput(p[d[0]], function (v) { p[d[0]] = v; changed(); draw(); });
             else { inp = input({ id: "tree-" + d[0], type: d[2], suggest: d[3] }, p[d[0]], function (v) { p[d[0]] = v; changed(); draw(); }); inp.setAttribute("data-k", d[0] === "first" ? "name" : d[0]); }
@@ -1103,7 +1109,7 @@
           var mg = el("div", { class: "ak-form ak-tree-fields" });
           var byField = {}; it.fields.forEach(function (x) { if (x.id) byField[x.id] = x; });
           ["first_name", "last_name", "married_name", "birth_date", "birth_time", "birth_place"].forEach(function (k) {
-            var fd = byField[k]; if (!fd) return;
+            var fd = byField[k]; if (!fd || (k === "married_name" && !hasMarriage("me"))) return;
             var w = el("div", { class: "fld" }), inp = input({ id: "me-" + k, type: fd.type }, state.data[k], function (v) {
               state.data[k] = v; changed(); draw();
               var main = document.querySelector('#ak [data-f="' + k + '"]'); if (main && main.value !== v) main.value = v;
