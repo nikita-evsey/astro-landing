@@ -388,6 +388,12 @@
       else if (f.type === "select") {
         node = el("select", {}, [el("option", { value: "", text: "—" })].concat(f.options.map(function (o) { return el("option", { value: o, text: o }); })));
       } else node = el("input", { type: f.type === "date" ? "date" : f.type === "time" ? "time" : "text" });
+      // Подсказки: выбрать готовый ответ или вписать свой.
+      if (f.suggest && f.suggest.length) {
+        var dl = "ak-dl-" + f.id;
+        if (!document.getElementById(dl)) document.body.appendChild(el("datalist", { id: dl }, f.suggest.map(function (o) { return el("option", { value: o }); })));
+        node.setAttribute("list", dl); node.setAttribute("autocomplete", "off");
+      }
       node.value = value == null ? "" : value;
       if (ro) node.disabled = true;
       node.addEventListener("input", function () { onchange(node.value); });
@@ -403,7 +409,19 @@
         wrap.appendChild(el("div", { class: "ak-hint", text: "Примеры вопросов:" }));
         wrap.appendChild(el("ul", { class: "ak-ex" }, f.examples.map(function (x) { return el("li", { text: x }); })));
       }
-      wrap.appendChild(input(f, holder[key], function (v) { holder[key] = v; changed(); }));
+      var node = input(f, holder[key], function (v) { holder[key] = v; changed(); });
+      wrap.appendChild(node);
+      // Быстрый выбор готового ответа (подсказки datalist на телефоне видны не всегда).
+      if (f.suggest && f.suggest.length && !state.cab.locked) {
+        wrap.appendChild(el("div", { class: "ak-hint" }, f.suggest.map(function (o) {
+          return el("button", { class: "ak-link", text: o, onclick: function () { node.value = o; holder[key] = o; changed(); } });
+        })));
+      }
+      // Поле видно, только если заполнено другое (showIf).
+      if (f.showIf) {
+        var sync = function () { wrap.hidden = !String(holder[f.showIf] || "").trim(); };
+        state.showIf.push(sync); sync();
+      }
       return wrap;
     }
 
@@ -441,6 +459,7 @@
       if (it.status === "sent") root.appendChild(el("p", { class: "ak-ok", text: "Анкета отправлена " + when(it.submitted_at) + ". Можно поправить и отправить ещё раз." }));
       if (state.restored) { root.appendChild(el("p", { class: "ak-ok", text: "Восстановил несохранённые правки из этого браузера." })); state.restored = false; setTimeout(flush, 300); }
       var form = el("div", { class: "ak-form" });
+      state.showIf = [];
       it.fields.forEach(function (f) {
         if (f.type === "section") {
           form.appendChild(el("div", { class: "ak-section", text: f.label }));
@@ -460,6 +479,7 @@
     function setSave(t) { var s = document.getElementById("ak-save"); if (s) s.textContent = t; }
     function changed() {
       state.dirty = true; setSave("Сохраняю…");
+      (state.showIf || []).forEach(function (fn) { fn(); });
       lsPut(state.item.id, state.data, state.rev);
       clearTimeout(state.timer); state.timer = setTimeout(flush, 1200);
     }
