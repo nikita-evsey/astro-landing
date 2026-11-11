@@ -1125,23 +1125,20 @@
               return r;
             };
             var L2 = zone(-1), R2 = zone(1);
-            // Прямые предки парами; другие супруги обоих – вплотную к паре с наружной стороны (мамина линия – слева, папина – справа),
-            // пару не разрывают. Ближе – супруги того, кто стоит с краю; у каждого текущий ближе, потом без своих семей.
+            // Прямые предки парами, пару не разрывают; у каждого из пары его другие супруги – текущий ближе, потом без своих семей.
             var center = [];
             var more = function (id) { return items.some(function (o) { return att[o] && att[o].id === id; }) ? 1 : 0; };
             for (var i = 0; i < pedL.length; i++) {
               var a = pedL[i], b = pedL[i + 1], pair = b && partners(a, g).some(function (z) { return z.id === b; }) ? [a, b] : [a];
               if (pair.length === 2) i++;
-              // Пара родителей натива (мама слева, папа справа) – у каждого своя сторона; пары выше – вся пара на одной стороне.
-              var split = pair.length === 2 && (side[pair[0]] || 1) !== (side[pair[1]] || 1);
+              // Другие супруги – рядом с человеком, с другой стороны от того, с кем он родил предка натива (решение Никиты 2026-11-12):
+              // у левого в паре – слева, у правого – справа; одиночка – наружу.
               var blk = pair.slice();
-              [-1, 1].forEach(function (s) {
-                var who = split ? pair.filter(function (pid) { return (side[pid] || 1) === s; }) : ((side[a] || 1) === s ? (s < 0 ? pair : pair.slice().reverse()) : []);
-                who.forEach(function (pid) {
-                  partners(pid, g).filter(function (z) { return !ped[z.id] && att[z.id] && att[z.id].id === pid; })
-                    .sort(function (x1, x2) { return (x2.cur ? 1 : 0) - (x1.cur ? 1 : 0) || more(x1.id) - more(x2.id) || by(x1.id) - by(x2.id); })
-                    .forEach(function (z) { var u = unit(z.id, s); blk = s < 0 ? u.concat(blk) : blk.concat(u); });
-                });
+              pair.forEach(function (pid, k) {
+                var s = pair.length === 2 ? (k === 0 ? -1 : 1) : (side[pid] || 1);
+                partners(pid, g).filter(function (z) { return !ped[z.id] && att[z.id] && att[z.id].id === pid; })
+                  .sort(function (x1, x2) { return (x2.cur ? 1 : 0) - (x1.cur ? 1 : 0) || more(x1.id) - more(x2.id) || by(x1.id) - by(x2.id); })
+                  .forEach(function (z) { var u = unit(z.id, s); blk = s < 0 ? u.concat(blk) : blk.concat(u); });
               });
               center = center.concat(blk);
             }
