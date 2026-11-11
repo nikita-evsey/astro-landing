@@ -337,7 +337,7 @@
     .ak-tree-svg .ln.bold { stroke: var(--accent); stroke-width: 4; stroke-dasharray: none; }
     .ak-gen span { background: #fffb; padding: 0 6px; border-radius: 4px; position: relative; z-index: 1; }
     .ak-gen { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; text-align: center; margin: 6px 0 4px; position: relative; }
-    .ak-tree-row { display: flex; justify-content: center; gap: 14px; padding: 30px 8px 22px; position: relative; }
+    .ak-tree-row { display: flex; justify-content: center; gap: 40px; padding: 30px 8px 22px; position: relative; }
     .ak-person { position: relative; z-index: 1; width: 148px; min-height: 58px; text-align: left; font: inherit; background: #fff; border: 1px solid var(--rule); border-radius: 8px; padding: 5px 8px; cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
     .ak-person .r { font-size: 11px; color: var(--muted); line-height: 1.2; }
     .ak-person .n { font-size: 13px; font-weight: 600; line-height: 1.25; }
@@ -378,8 +378,15 @@
     .ak-person.pale > * { opacity: .45; }
     .ak-tree-svg .ln.union { stroke: #7d7466; stroke-width: 1.3; }
     .ak-tree-svg .ln.union.former { stroke-dasharray: 5 4; }
-    .ak-tree-svg .ul { font-size: 10px; fill: var(--muted); }
+    .ak-tree-svg .ul { font-size: 9.5px; fill: var(--muted); }
     .ak-tree-svg .ul.former { fill: #b3aa9c; }
+    .ak-tree-svg .ul.side { text-anchor: start; }
+    .ak-tree-svg .ub circle { fill: #fff; stroke: #7d7466; stroke-width: 1.2; }
+    .ak-tree-svg .ub text { font-size: 12px; fill: #3d362c; }
+    .ak-tree-svg .ub.former circle { stroke: #b3aa9c; stroke-dasharray: 2 2; }
+    .ak-tree-svg .ub.former text { fill: #9a9183; }
+    .ak-tree-svg .ub { pointer-events: auto; }
+    .ak-tree-svg .ub .strike { stroke: var(--accent); stroke-width: 1.6; }
     .ak-unions { margin-top: 12px; }
     .ak-union { border: 1px solid var(--rule); border-radius: 8px; background: #fff; padding: 6px 10px; margin: 6px 0; }
     .ak-union.former { background: #faf8f4; }
@@ -479,6 +486,8 @@
       state.item = null;
       if (location.hash) history.replaceState(null, "", location.pathname + location.search);
       api("").then(function (cab) {
+        var main = cab.ankety.filter(function (a) { return a.role !== "relative" && a.name; })[0];
+        setTitle(main ? main.name : "");
         state.cab = cab; clear();
         root.appendChild(el("h1", { text: "Анкета перед консультацией" }));
         root.appendChild(el("p", {}, [el("b", { text: cab.product + (cab.urgent ? " – срочно" : "") })]));
@@ -831,17 +840,26 @@
           // Ближе – текущий брак, дальше – бывшие; дальше всех – бывший, у которого своя другая семья (чтобы его новый супруг встал рядом с ним).
           var rank = function (u) { var o = other(u, id); return (former(u) ? 1 : 0) + (unionsOf(o).length > 1 ? 2 : 0); };
           var us = unionsOf(id).slice().sort(function (a, b) { return rank(a) - rank(b); });
-          us.forEach(function (u, i) { visit(other(u, id), g, px + d * (1.05 + i * 1.05), d); });
+          if (id === "me") {
+            // У натива: текущие супруги – слева, бывшие – справа, вплотную к нему.
+            var li = 0, ri = 0;
+            us.forEach(function (u) { if (former(u)) visit(other(u, id), g, px + 1.05 * ++ri, 1); else visit(other(u, id), g, px - 1.05 * ++li, -1); });
+          } else us.forEach(function (u, i) { visit(other(u, id), g, px + d * (1.05 + i * 1.05), d); });
           var kids = childrenOf(id);
-          kids.forEach(function (c, i) { visit(c.id, g - 1, px + (i - (kids.length - 1) / 2) * 1.1, d); });
+          // Братья и сёстры натива – не как «дети родителя», а по краям ряда натива (ставятся после супругов, см. ниже).
+          kids.forEach(function (c, i) { if (c.same === "me" || c.sib === "me") return; visit(c.id, g - 1, px + (i - (kids.length - 1) / 2) * 1.1, d); });
           var sibs = P.filter(function (c) { return c.same === id || c.sib === id || (p.same && c.id === p.same) || (p.sib && c.id === p.sib); });
-          sibs.forEach(function (c, i) { visit(c.id, g, px - d * (1.05 + i * 1.05), -d); });
+          if (id === "me") {
+            // Братья и сёстры натива – за супругами, по краям: папины сводные справа, остальные слева (ставятся после всех супругов).
+            var papa = parentsOf(p).filter(function (pid) { var o = byId(pid); return o && !o.step; })[1];
+            sibs.forEach(function (c) { var right = papa && c.sib && arr(c, "parents").indexOf(papa) >= 0; later.push([c.id, g, px + (right ? 1.05 : -1.05), right ? 1 : -1]); });
+          } else sibs.forEach(function (c, i) { visit(c.id, g, px - d * (1.05 + i * 1.05), -d); });
         }
-        // Потомки и сводные – под серединой своих родителей (если родители в ряду выше).
+        // Потомки – под серединой своих родителей (если родители в ряду выше).
         var minG = 0; Object.keys(gen).forEach(function (k) { if (gen[k] < minG) minG = gen[k]; });
-        for (var g = 0; g >= minG; g--) {
+        for (var g = -1; g >= minG; g--) {   // ряд натива не трогаем: там порядок – супруги, потом братья и сёстры по краям
           P.forEach(function (c) {
-            if (gen[c.id] !== g || c.id === "me" || (g === 0 && !c.sib)) return;
+            if (gen[c.id] !== g) return;
             var ps = parentsOf(c).filter(function (id) { return gen[id] === g + 1; });
             if (ps.length) x[c.id] = ps.reduce(function (s2, id) { return s2 + x[id]; }, 0) / ps.length + (x[c.id] % 1) * 0.01;
           });
@@ -918,6 +936,12 @@
         return c;
       }
 
+      // Коротко для линии между карточками: «86–95», «с 98».
+      function shortYears(u) {
+        var two = function (y) { return y ? String(y).slice(-2) : ""; };
+        var a = u.start && u.start.y, b = u.end && u.end.y;
+        return a && b ? two(a) + "–" + two(b) : a ? (u.end_kind ? two(a) + "–?" : "с " + two(a)) : b ? "–" + two(b) : "";
+      }
       function years(u) {
         var a = u.start && u.start.y, b = u.end && u.end.y;
         return a && b ? a + "–" + b : a ? (u.end_kind ? a + "–?" : "с " + a) : b ? "–" + b : "";
@@ -930,6 +954,18 @@
         svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("class", "ak-tree-svg");
         function pos(id) { var c = cards[id]; if (!c) return null; var r = c.getBoundingClientRect(); return { x: r.left - base.left + r.width / 2, t: r.top - base.top, b: r.bottom - base.top, l: r.left - base.left, r: r.right - base.left, m: r.top - base.top + Math.min(r.height / 2, 26) }; }
         function path(d, cls) { var e = document.createElementNS(NS, "path"); e.setAttribute("d", d); e.setAttribute("class", cls); svg.appendChild(e); }
+        function badge(x, y, u) {
+          // Значок по виду союза; развод / расстались – тот же значок, перечёркнутый (решение Никиты 2026-11-11).
+          var sym = u.kind === "relationship" ? "♡" : u.kind === "civil" ? "⚯" : "⚭";
+          var g = document.createElementNS(NS, "g"); g.setAttribute("class", "ub" + (former(u) ? " former" : ""));
+          var c = document.createElementNS(NS, "circle"); c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", 8);
+          var t = document.createElementNS(NS, "text"); t.setAttribute("x", x); t.setAttribute("y", y + 4); t.setAttribute("text-anchor", "middle"); t.textContent = sym;
+          var tip = document.createElementNS(NS, "title");
+          tip.textContent = (U_KIND.filter(function (k) { return k[0] === (u.kind || "marriage"); })[0] || ["", "брак"])[1] + (u.end_kind ? ", " + U_END.filter(function (k) { return k[0] === u.end_kind; })[0][1] : "") + (years(u) ? " " + years(u) : "");
+          g.appendChild(tip); g.appendChild(c); g.appendChild(t);
+          if (former(u)) { var sl = document.createElementNS(NS, "line"); sl.setAttribute("x1", x - 6); sl.setAttribute("y1", y + 6); sl.setAttribute("x2", x + 6); sl.setAttribute("y2", y - 6); sl.setAttribute("class", "strike"); g.appendChild(sl); }
+          svg.appendChild(g);
+        }
         function label(x, y, s, cls) { var e = document.createElementNS(NS, "text"); e.setAttribute("x", x); e.setAttribute("y", y); e.setAttribute("text-anchor", "middle"); e.setAttribute("class", cls); e.textContent = s; svg.appendChild(e); }
         // Браки: линия между супругами (текущий – двойная, бывший – пунктир), годы над линией.
         var umid = {}, arcs = {};
@@ -943,29 +979,38 @@
             var arcY = Math.min(A.t, B.t) - 8 - (arcs[Math.round(Math.min(A.t, B.t))] = (arcs[Math.round(Math.min(A.t, B.t))] || 0) + 1) * 6 + 6, xa = A.x + 12, xb = B.x - 12;
             path("M" + xa + " " + A.t + " V" + arcY + " H" + xb + " V" + B.t, cls);
             umid[u.id] = { x: (xa + xb) / 2, y: arcY, b: Math.max(A.b, B.b) };
-            label((xa + xb) / 2, arcY - 3, sym + (yr ? " " + yr : ""), lcls);
+            badge((xa + xb) / 2, arcY, u);
+            if (yr) label((xa + xb) / 2 + 12, arcY - 3, yr, lcls + " side");
             return;
           }
           if (former(u)) path("M" + A.r + " " + y + " H" + B.l, cls);
           else { path("M" + A.r + " " + (y - 2) + " H" + B.l, cls); path("M" + A.r + " " + (y + 2) + " H" + B.l, cls); }
           var mx = (A.r + B.l) / 2;
           umid[u.id] = { x: mx, y: y + 2, b: Math.max(A.b, B.b) };
-          label(mx, y - 6, sym + (yr ? " " + yr : ""), lcls);
+          badge(mx, y, u);
+          if (yr) label(mx, y - 12, shortYears(u), lcls);
         });
-        // Дети: от середины линии брака родителей; остальные родители (отчим и т. п.) – от своей карточки.
+        // Дети: от середины линии брака родителей; у каждой пары своя высота горизонтали, чтобы линии разных пар не сливались.
+        // Отчим / мачеха – без линии к детям (связь видна через брак с мамой / папой).
+        var bus = {}, busN = {};
+        function busY(key, top, bottom) {
+          if (bus[key] == null) { var r = Math.round(top); busN[r] = (busN[r] || 0) + 1; bus[key] = busN[r]; }
+          var k = bus[key], gap = bottom - top;
+          return top + Math.min(gap - 6, 10 + (k - 1) * 7);
+        }
         P.forEach(function (c) {
           var cp = pos(c.id); if (!cp) return;
           var ps = parentsOf(c).slice(), done = {};
           for (var i = 0; i < ps.length; i++) for (var j = i + 1; j < ps.length; j++) {
             var u = unionOf(ps[i], ps[j]); if (!u || !umid[u.id] || done[ps[i]] || done[ps[j]]) continue;
-            var mm = umid[u.id], midY = (mm.b + cp.t) / 2;
+            var mm = umid[u.id], midY = busY("u" + u.id, mm.b, cp.t);
             path("M" + mm.x + " " + mm.y + " V" + midY + " H" + cp.x + " V" + cp.t, "ln" + (bold[c.id + "|" + ps[i]] || bold[c.id + "|" + ps[j]] ? " bold" : ""));
             done[ps[i]] = done[ps[j]] = true;
           }
           ps.forEach(function (pid) {
             if (done[pid]) return;
-            var pp = pos(pid); if (!pp) return;
-            var midY = (pp.b + cp.t) / 2, par = byId(pid);
+            var pp = pos(pid), par = byId(pid); if (!pp || (par && par.step)) return;
+            var midY = busY("p" + pid, pp.b, cp.t);
             path("M" + pp.x + " " + pp.b + " V" + midY + " H" + cp.x + " V" + cp.t, "ln" + (par && par.step ? " step" : "") + (bold[c.id + "|" + pid] ? " bold" : ""));
           });
         });
@@ -1174,8 +1219,12 @@
       return box;
     }
 
+    // Заголовок вкладки: «Имя Фамилия – Анкета» (решение Никиты 2026-11-11).
+    function setTitle(name) { document.title = (String(name || "").trim() ? String(name).trim() + " – " : "") + "Анкета"; }
+
     function renderForm() {
       var it = state.item; clear();
+      setTitle(pname(state.data) || (it.kind === "relative" ? it.label : ""));
       root.appendChild(el("button", { class: "ak-link", text: "← Все анкеты", onclick: function () { flush().then(showCabinet); } }));
       root.appendChild(el("h1", { text: it.label }));
       root.appendChild(el("p", { class: "ak-muted", text: it.cabinet.product + (it.cabinet.deadline ? " · заполнить до " + it.cabinet.deadline.text : "") }));
@@ -1217,6 +1266,7 @@
     function setSave(t) { var s = document.getElementById("ak-save"); if (s) s.textContent = t; }
     function changed() {
       state.dirty = true; setSave("Сохраняю…");
+      if (state.item && state.item.kind !== "relative") setTitle(pname(state.data));
       (state.showIf || []).forEach(function (fn) { fn(); });
       lsPut(state.item.id, state.data, state.rev);
       clearTimeout(state.timer); state.timer = setTimeout(flush, 1200);
