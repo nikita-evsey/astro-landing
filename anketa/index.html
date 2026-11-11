@@ -360,6 +360,8 @@
     .ak-link-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; font-size: 13px; }
     .ak-link-row select { width: auto !important; height: 30px !important; font-size: 13px !important; padding: 2px 6px !important; }
     .ak-link-row .ak-btn { font-size: 13px; padding: 4px 10px; }
+    .ak-unlink { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 14px; padding: 0 2px; }
+    .ak-unlink:hover { color: var(--accent); }
     .ak-check-inline { display: inline-flex !important; gap: 4px; align-items: center; margin: 0 12px 0 0 !important; font-weight: 400 !important; font-size: 13px !important; }
     .ak-from { font-size: 14px; background: var(--box); border-radius: 8px; padding: 8px 12px; margin: 6px 0 10px; }
     @media (max-width: 640px) { .ak-person { width: 124px; } .ak-tree-row { gap: 8px; } }
@@ -515,6 +517,15 @@
           if (f.tone && f.tone[o]) op.setAttribute("data-tone", f.tone[o]);
           return op;
         })));
+        node.appendChild(el("option", { value: "__own", text: "Свой вариант…" }));
+        var prevVal = value || "";
+        node.addEventListener("change", function () {
+          if (node.value !== "__own") { prevVal = node.value; return; }
+          var own = (window.prompt("Впишите свой вариант", "") || "").trim().slice(0, 120);
+          if (!own) { node.value = prevVal; return; }
+          var op = el("option", { value: own, text: own }); node.insertBefore(op, node.lastChild);
+          node.value = own; prevVal = own; node.dispatchEvent(new Event("input"));
+        }, true);
         if (f.tone) {
           var paint = function () { var t = f.tone[node.value]; if (t) node.setAttribute("data-tone", t); else node.removeAttribute("data-tone"); };
           node.addEventListener("change", paint); setTimeout(paint, 0);
@@ -542,7 +553,8 @@
         wrap.appendChild(el("div", { class: "ak-hint", text: "Примеры вопросов:" }));
         wrap.appendChild(el("ul", { class: "ak-ex" }, f.examples.map(function (x) { return el("li", { text: x }); })));
       }
-      var node = input(f, holder[key], function (v) { holder[key] = v; changed(); });
+      var node = input(f, holder[key], function (v) { holder[key] = v; changed(); if (state.onField) state.onField(f.id); });
+      node.setAttribute("data-f", f.id);
       wrap.appendChild(node);
       if (hint) wrap.appendChild(hint);
       // Быстрый выбор готового ответа (подсказки datalist на телефоне видны не всегда).
@@ -662,7 +674,12 @@
       if (/^(бабушка|дедушка)/.test(lr) && (kind === "mother" || kind === "father")) return (kind === "mother" ? "Прабабушка" : "Прадедушка") + " (" + lr + ")";
       if (/^(брат|сестра)$/.test(lr) && (kind === "son" || kind === "daughter")) return kind === "son" ? "Племянник" : "Племянница";
       if (/^(сын|дочь)$/.test(lr) && (kind === "son" || kind === "daughter")) return kind === "son" ? "Внук" : "Внучка";
-      return REL_ME[kind] + (r || x.name ? " – " + (r || x.name).toLowerCase() : "");
+      return REL_ME[kind] + (r || pname(x) ? " – " + (r || pname(x)).toLowerCase() : "");
+    }
+
+    function pname(d) {
+      var b = [d.first || d.first_name, d.last || d.last_name].filter(function (x) { return String(x || "").trim(); }).join(" ");
+      return b || String(d.name || "").trim();
     }
 
     function treeField(f) {
@@ -719,8 +736,8 @@
       wrap.appendChild(stage); box.appendChild(wrap); box.appendChild(panel);
 
       function cardText(p) {
-        if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: state.data.name || it.label, born: state.data.birth_date ? "р. " + state.data.birth_date.split("-").reverse().join(".") : "", bplace: state.data.birth_place || "" };
-        return { rel: p.rel || "Кто?", name: p.name || "", born: p.birth ? "р. " + p.birth : "", bplace: p.place || "", died: p.death ? "† " + p.death : "", dplace: p.death_place || "" };
+        if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: pname(state.data) || it.label, married: state.data.married_name || "", born: state.data.birth_date ? "р. " + state.data.birth_date.split("-").reverse().join(".") : "", bplace: state.data.birth_place || "" };
+        return { rel: p.rel || "Кто?", name: pname(p), married: p.married || "", born: p.birth ? "р. " + p.birth : "", bplace: p.place || "", died: p.death ? "† " + p.death : "", dplace: p.death_place || "" };
       }
 
       function draw() {
@@ -751,6 +768,7 @@
           onclick: function () { sel = sel === p.id ? null : p.id; draw(); showPanel(); } }, [
           el("span", { class: "r", text: (isMark(p.id) ? "★ " : "") + t.rel }),
           el("span", { class: "n", text: t.name || "Имя?" }),
+          t.married ? el("span", { class: "pl", text: "в браке " + t.married }) : null,
           t.born ? el("span", { class: "d", text: t.born }) : null,
           t.bplace ? el("span", { class: "pl", text: t.bplace }) : null,
           t.died ? el("span", { class: "d", text: t.died }) : null,
@@ -822,7 +840,7 @@
       }
 
       function remove(p) {
-        if (!confirm("Удалить «" + (p.rel || "") + (p.name ? " " + p.name : "") + "» из древа?" + (p.anketa ? " Его анкета останется в кабинете." : ""))) return;
+        if (!confirm("Удалить «" + (p.rel || "") + (pname(p) ? " " + pname(p) : "") + "» из древа?" + (p.anketa ? " Его анкета останется в кабинете." : ""))) return;
         P.forEach(function (o) {
           if (o.same === p.id) { o.parents = parentsOf(p).slice(); delete o.same; }
           if (o.sib === p.id) delete o.sib;
@@ -836,15 +854,16 @@
         while (panel.firstChild) panel.removeChild(panel.firstChild);
         var p = sel && byId(sel);
         if (!p) { panel.appendChild(el("div", { class: "ak-hint", text: ro ? "Нажмите на человека, чтобы посмотреть." : "Нажмите на человека, чтобы заполнить или добавить к нему родственника. Начните с себя: «+ мать», «+ отец»…" })); return; }
-        var head = el("div", { class: "ak-row" }, [el("b", { text: p.id === "me" ? cardText(p).name || "Вы" : (p.rel || "Родственник") + (p.name ? " – " + p.name : "") }),
+        var head = el("div", { class: "ak-row" }, [el("b", { text: p.id === "me" ? cardText(p).name || "Вы" : (p.rel || "Родственник") + (pname(p) ? " – " + pname(p) : "") }),
           el("button", { class: "ak-link", style: "font-size:14px", text: "Закрыть", onclick: function () { sel = null; draw(); showPanel(); } })]);
         panel.appendChild(head);
         if (p.id !== "me") {
           var grid = el("div", { class: "ak-form ak-tree-fields" });
-          [["rel", "Кем приходится", "text", REL_SUGGEST], ["name", "Имя (и фамилия)", "text"], ["birth", "Дата рождения", "text"], ["time", "Время рождения", "time"],
+          [["rel", "Кем приходится", "text", REL_SUGGEST], ["first", "Имя", "text"], ["last", "Фамилия", "text"], ["married", "Фамилия после замужества", "text"],
+           ["birth", "Дата рождения", "text"], ["time", "Время рождения", "time"],
            ["place", "Место рождения", "text"], ["death", "Дата смерти", "text"], ["death_place", "Место смерти", "text"]].forEach(function (d) {
             var w = el("div", { class: "fld" }), inp = input({ id: "tree-" + d[0], type: d[2], suggest: d[3] }, p[d[0]], function (v) { p[d[0]] = v; changed(); draw(); });
-            inp.setAttribute("data-k", d[0]);
+            inp.setAttribute("data-k", d[0] === "first" ? "name" : d[0]);
             if (d[0] === "birth" || d[0] === "death") inp.setAttribute("placeholder", "16.02.1966 или «май 1939»");
             w.appendChild(el("label", { text: d[1] })); w.appendChild(inp); grid.appendChild(w);
           });
@@ -857,7 +876,7 @@
           // Брат / сестра: какие родители общие (сводные – не все).
           var ref = p.same ? byId(p.same) : p.sib ? byId(p.sib) : null;
           if (ref && parentsOf(ref).length) {
-            var pr = el("div", { class: "ak-hint" }, ["Общие родители с «" + cardText(ref).rel.toLowerCase() + (ref.name ? " " + ref.name : "") + "»: "]);
+            var pr = el("div", { class: "ak-hint" }, ["Общие родители с «" + (ref.id === "me" ? cardText(ref).name : cardText(ref).rel.toLowerCase() + (pname(ref) ? " " + pname(ref) : "")) + "»: "]);
             parentsOf(ref).forEach(function (pid) {
               var par = byId(pid); if (!par) return;
               var cb = el("input", { type: "checkbox" }); cb.checked = p.same ? true : parentsOf(p).indexOf(pid) >= 0; cb.disabled = ro;
@@ -867,23 +886,48 @@
                 if (cb.checked && i < 0) a.push(pid); if (!cb.checked && i >= 0) a.splice(i, 1);
                 changed(); draw();
               };
-              pr.appendChild(el("label", { class: "ak-check-inline" }, [cb, " " + (par.rel || "") + (par.name ? " " + par.name : "")]));
+              pr.appendChild(el("label", { class: "ak-check-inline" }, [cb, " " + (par.rel || "") + (pname(par) ? " " + pname(par) : "")]));
             });
             panel.appendChild(pr);
           }
         } else {
-          panel.appendChild(el("div", { class: "ak-hint", text: "Имя, дата и место рождения – в полях анкеты выше. Здесь – добавьте родственников." }));
+          var mg = el("div", { class: "ak-form ak-tree-fields" });
+          var byField = {}; it.fields.forEach(function (x) { if (x.id) byField[x.id] = x; });
+          ["first_name", "last_name", "married_name", "birth_date", "birth_time", "birth_place"].forEach(function (k) {
+            var fd = byField[k]; if (!fd) return;
+            var w = el("div", { class: "fld" }), inp = input({ id: "me-" + k, type: fd.type }, state.data[k], function (v) {
+              state.data[k] = v; changed(); draw();
+              var main = document.querySelector('#ak [data-f="' + k + '"]'); if (main && main.value !== v) main.value = v;
+            });
+            w.appendChild(el("label", { class: fd.required ? "req" : "", text: fd.label })); w.appendChild(inp); mg.appendChild(w);
+          });
+          panel.appendChild(mg);
+          panel.appendChild(el("div", { class: "ak-hint", text: "Это те же поля, что в начале анкеты, – меняются и там." }));
         }
         if (!ro) {
           panel.appendChild(el("div", { class: "ak-tree-add" }, [el("span", { class: "ak-hint", text: "Добавить: " })].concat(KINDS.map(function (k) {
             return el("button", { type: "button", class: "ak-chip", text: "+ " + (p.id === "me" && REL_ME[k[0]] ? REL_ME[k[0]].toLowerCase() : k[1]), onclick: function () { addKind(k[0], p); } });
           }))));
         }
+        // Текущие связи – каждую можно убрать (×).
+        if (p.id !== "me" || arr(p, "parents").length || arr(p, "partners").length) {
+          var links = [];
+          var nm = function (o) { if (!o) return "?"; var t = cardText(o); return o.id === "me" ? (t.name || "натив") : t.rel + (t.name ? " " + t.name : ""); };
+          arr(p, "parents").forEach(function (pid) { links.push(["родитель: " + nm(byId(pid)), function () { p.parents = p.parents.filter(function (x) { return x !== pid; }); }]); });
+          P.forEach(function (o) { if (arr(o, "parents").indexOf(p.id) >= 0) links.push(["ребёнок: " + nm(o), function () { o.parents = o.parents.filter(function (x) { return x !== p.id; }); }]); });
+          arr(p, "partners").forEach(function (pid) { links.push(["партнёр: " + nm(byId(pid)), function () { p.partners = p.partners.filter(function (x) { return x !== pid; }); var o = byId(pid); if (o) o.partners = arr(o, "partners").filter(function (x) { return x !== p.id; }); }]); });
+          if (p.same) links.push(["брат / сестра (те же родители): " + nm(byId(p.same)), function () { delete p.same; }]);
+          if (p.sib) links.push(["сводный(ая): " + nm(byId(p.sib)), function () { delete p.sib; }]);
+          P.forEach(function (o) { if (o.same === p.id || o.sib === p.id) links.push([(o.same ? "брат / сестра: " : "сводный(ая): ") + nm(o), function () { if (o.same === p.id) { o.parents = parentsOf(p).slice(); delete o.same; } else delete o.sib; }]); });
+          if (links.length) panel.appendChild(el("div", { class: "ak-link-row" }, [el("span", { class: "ak-hint", text: "Связи:" })].concat(links.map(function (l) {
+            return el("span", { class: "ak-chip" }, [l[0] + " ", ro ? null : el("button", { type: "button", class: "ak-unlink", title: "Убрать связь", text: "×", onclick: function () { l[1](); changed(); draw(); showPanel(); } })]);
+          }))));
+        }
         // Связь с древом: «этот человек – мать / брат / … для <кого>».
         if (!ro && p.id !== "me") {
           var kSel = el("select", {}, KINDS.map(function (k) { return el("option", { value: k[0], text: k[1] }); }));
           var others = P.filter(function (o) { return o.id !== p.id; });
-          var xSel = el("select", {}, others.map(function (o) { var t = cardText(o); return el("option", { value: o.id, text: (t.rel + (t.name ? " " + t.name : "")).slice(0, 40) }); }));
+          var xSel = el("select", {}, others.map(function (o) { var t = cardText(o); return el("option", { value: o.id, text: (o.id === "me" ? (t.name || "натив") : t.rel + (t.name ? " " + t.name : "")).slice(0, 40) }); }));
           panel.appendChild(el("div", { class: "ak-link-row" }, [el("span", { class: "ak-hint", text: "Связать: это" }), kSel, el("span", { class: "ak-hint", text: "для" }), xSel,
             el("button", { type: "button", class: "ak-btn ghost", text: "Связать", onclick: function () { linkAs(kSel.value, p, byId(xSel.value)); } })]));
         }
@@ -892,7 +936,7 @@
           if (p.anketa) ops.appendChild(el("button", { class: "ak-btn ghost", text: "Открыть анкету", onclick: function () { flush().then(function () { openItem(p.anketa); }); } }));
           else if (!ro) ops.appendChild(el("button", { class: "ak-btn ghost", text: "Завести анкету на этого человека", onclick: function () {
             var b = this; b.disabled = true;
-            flush().then(function () { return api("/relative", { from: it.id, person: p.id, label: [p.rel, p.name].filter(Boolean).join(": ") || "Родственник" }); })
+            flush().then(function () { return api("/relative", { from: it.id, person: p.id, label: [p.rel, pname(p)].filter(Boolean).join(": ") || "Родственник" }); })
               .then(function (r) { p.anketa = r.id; changed(); return flush().then(function () { openItem(r.id); }); })
               .catch(function (e) { b.disabled = false; alert(e.message); });
           } }));
@@ -909,6 +953,11 @@
         panel.appendChild(ops);
       }
 
+      state.onField = function (k) {
+        if (!/^(first_name|last_name|married_name|birth_date|birth_place)$/.test(k)) return;
+        draw();
+        if (sel === "me") showPanel();   // фокус – в поле анкеты выше, карточку можно перерисовать
+      };
       draw(); showPanel();
       window.addEventListener("resize", function () { if (document.body.contains(stage)) draw(); });
       return box;
