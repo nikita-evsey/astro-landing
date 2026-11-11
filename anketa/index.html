@@ -1115,18 +1115,8 @@
           }
           var out = [];
           if (g >= 1) {
-            // Центр – прямые предки; слева – мамина сторона, справа – папина.
-            var zone = function (s) {
-              var list = prim.filter(function (id) { return (side[id] || 1) === s; }).map(function (id) { return { id: id, k: key[id] }; });
-              orphans.filter(function (id) { return (side[id] || 1) === s; }).forEach(function (id) { list.push({ id: id, k: s < 0 ? -2 * BIG : 2 * BIG }); });
-              list.sort(function (a, b) { return a.k - b.k || by(a.id) - by(b.id); });
-              var r = [];
-              list.forEach(function (it2) { r = r.concat(unit(it2.id, s)); });
-              return r;
-            };
-            var L2 = zone(-1), R2 = zone(1);
             // Прямые предки парами, пару не разрывают; у каждого из пары его другие супруги – текущий ближе, потом без своих семей.
-            var center = [];
+            var center = [], used = {};
             var more = function (id) { return items.some(function (o) { return att[o] && att[o].id === id; }) ? 1 : 0; };
             for (var i = 0; i < pedL.length; i++) {
               var a = pedL[i], b = pedL[i + 1], pair = b && partners(a, g).some(function (z) { return z.id === b; }) ? [a, b] : [a];
@@ -1140,9 +1130,30 @@
                   .sort(function (x1, x2) { return (x2.cur ? 1 : 0) - (x1.cur ? 1 : 0) || more(x1.id) - more(x2.id) || by(x1.id) - by(x2.id); })
                   .forEach(function (z) { var u = unit(z.id, s); blk = s < 0 ? u.concat(blk) : blk.concat(u); });
               });
+              // Братья и сёстры (и сводные) – с той же стороны, за супругами, по месту своих родителей; со своими семьями.
+              pair.forEach(function (pid, k) {
+                var s = pair.length === 2 ? (k === 0 ? -1 : 1) : (side[pid] || 1), bp2 = bloodParents(pid), sibs = [];
+                prim.forEach(function (id) {
+                  if (used[id]) return;
+                  if (parentsOf(byId(id)).some(function (q) { var o = byId(q); return o && !o.step && bp2.indexOf(q) >= 0; })) { used[id] = true; sibs.push(id); }
+                });
+                sibs.sort(function (x1, x2) { return key[x1] - key[x2] || by(x1) - by(x2); });
+                var su = [];
+                sibs.forEach(function (id) { su = su.concat(unit(id, s)); });
+                blk = s < 0 ? su.concat(blk) : blk.concat(su);
+              });
               center = center.concat(blk);
             }
-            out = L2.concat(center, R2);
+            // Остальные (двоюродные, семьи сводных…) – наружу: мамина сторона слева, папина справа, по месту родителей.
+            var zone = function (s) {
+              var list = prim.filter(function (id) { return !used[id] && (side[id] || 1) === s; }).map(function (id) { return { id: id, k: key[id] }; });
+              orphans.filter(function (id) { return (side[id] || 1) === s; }).forEach(function (id) { list.push({ id: id, k: s < 0 ? -2 * BIG : 2 * BIG }); });
+              list.sort(function (a, b) { return a.k - b.k || by(a.id) - by(b.id); });
+              var r = [];
+              list.forEach(function (it2) { r = r.concat(unit(it2.id, s)); });
+              return r;
+            };
+            out = zone(-1).concat(center, zone(1));
           } else {
             // Ряд натива и ниже: группы детей одной пары – по месту родителей.
             if (g === 0 && items.indexOf("me") >= 0) { key.me = (function () { var ps = parentsOf(byId("me")).filter(function (q) { var o = byId(q); return o && !o.step && idx[q] != null; }); return ps.length ? ps.reduce(function (s, q) { return s + idx[q]; }, 0) / ps.length : 0; })(); prim.push("me"); }
@@ -1252,14 +1263,14 @@
             src = u ? unionNode("u:" + u.id, u.a, u.b, u) : unionNode("v:" + [ps[i], ps[j]].sort().join("|"), ps[i], ps[j], null);
           }
           if (!src) src = "n:" + ps[0];
-          var id = "e" + en++; edges.push({ id: id, sources: [src], targets: ["n:" + c.id] }); info[id] = { kind: "child", c: c, ps: ps };
+          var id = "e" + en++; edges.push({ id: id, sources: [src], targets: ["n:" + c.id] }); info[id] = { kind: "child", c: c, ps: ps, src: src };
         });
         nodes.sort(function (a, b) { return a.pt - b.pt || a.hint - b.hint; });
         var graph = { id: "root", layoutOptions: {
           "elk.algorithm": "layered", "elk.direction": "DOWN", "elk.edgeRouting": "ORTHOGONAL",
           "elk.partitioning.activate": "true", "elk.layered.considerModelOrder.strategy": "NODES_AND_EDGES", "elk.layered.crossingMinimization.forceNodeModelOrder": "true", "elk.layered.crossingMinimization.greedySwitch.type": "OFF",
           "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
-          "elk.spacing.nodeNode": "26", "elk.layered.spacing.nodeNodeBetweenLayers": "20", "elk.layered.spacing.edgeNodeBetweenLayers": "10",
+          "elk.spacing.nodeNode": "26", "elk.layered.spacing.nodeNodeBetweenLayers": "26", "elk.layered.spacing.edgeNodeBetweenLayers": "10",
           "elk.spacing.edgeEdge": "7", "elk.layered.spacing.edgeEdgeBetweenLayers": "7", "elk.padding": "[top=22,left=12,bottom=14,right=12]" },
           children: nodes.map(function (n) { return { id: n.id, width: n.width, height: n.height, layoutOptions: { "elk.partitioning.partition": String(n.pt) } }; }),
           edges: edges };
@@ -1276,8 +1287,44 @@
           var svg = document.createElementNS(NS, "svg"); svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("class", "ak-tree-svg");
           var isExt = function (id) { return !!(cards[id] && cards[id].classList.contains("ext")); };
           var path = function (d, cls) { var e = document.createElementNS(NS, "path"); e.setAttribute("d", d); e.setAttribute("class", cls); svg.appendChild(e); return e; };
+          // Дети пары: от значка брака – один ствол вниз, горизонталь и отводы к каждому ребёнку (решение Никиты 2026-11-12).
+          // Если стволы соседних пар попадают в пролёт друг друга – горизонтали на разной высоте, чтобы линии не пересекались.
+          var buses = {};
           (res.edges || []).forEach(function (e) {
-            var m = info[e.id]; if (!m) return;
+            var m = info[e.id]; if (!m || m.kind !== "child" || m.src.indexOf("n:") === 0) return;
+            var sn = box2[m.src], cb = box2["n:" + m.c.id]; if (!sn || !cb) return;
+            var g2 = buses[m.src] = buses[m.src] || { x: sn.x + sn.width / 2, y: sn.y + sn.height, kids: [] };
+            g2.kids.push({ m: m, x: cb.x + cb.width / 2, t: cb.y });
+          });
+          var busRows = {};
+          Object.keys(buses).forEach(function (k) {
+            var g2 = buses[k], xs = g2.kids.map(function (q) { return q.x; }).concat([g2.x]);
+            g2.lo = Math.min.apply(null, xs); g2.hi = Math.max.apply(null, xs);
+            g2.top = Math.min.apply(null, g2.kids.map(function (q) { return q.t; }));
+            var r = Math.round(g2.top / 10); (busRows[r] = busRows[r] || []).push(g2);
+          });
+          Object.keys(busRows).forEach(function (r) {
+            var list = busRows[r], placed = [];
+            var above = function (a, b) { return a.x > b.lo + 1 && a.x < b.hi - 1; };   // ствол A внутри пролёта B – горизонталь A выше
+            while (placed.length < list.length) {
+              var nx = list.filter(function (g2) { return placed.indexOf(g2) < 0 && !list.some(function (h) { return h !== g2 && placed.indexOf(h) < 0 && above(h, g2); }); });
+              if (!nx.length) nx = list.filter(function (g2) { return placed.indexOf(g2) < 0; }).slice(0, 1);
+              nx.forEach(function (g2) { g2.lvl = placed.length; placed.push(g2); });
+            }
+            var maxL = Math.max.apply(null, list.map(function (g2) { return g2.lvl; }));
+            list.forEach(function (g2) { var y0 = Math.max.apply(null, list.map(function (h) { return h.y; })), gap = g2.top - y0; g2.busY = Math.round(g2.top - Math.min(gap - 4, 11 + (maxL - g2.lvl) * 6)); });
+          });
+          Object.keys(buses).forEach(function (k) {
+            var g2 = buses[k], allExt = g2.kids.every(function (q) { return isExt(q.m.c.id); });
+            path("M" + g2.x + " " + g2.y + " V" + g2.busY + (g2.lo < g2.x ? " M" + g2.x + " " + g2.busY + " H" + g2.lo : "") + (g2.hi > g2.x ? " M" + g2.x + " " + g2.busY + " H" + g2.hi : ""), "ln" + (allExt ? " ext" : ""));
+            g2.kids.forEach(function (q) {
+              var m = q.m, cls = (m.c.adopted ? "ln step" : "ln") + (isExt(m.c.id) ? " ext" : "");
+              path("M" + q.x + " " + g2.busY + " V" + q.t, cls);
+              if (m.ps.some(function (pid) { return bold[m.c.id + "|" + pid]; })) path("M" + g2.x + " " + g2.y + " V" + g2.busY + " H" + q.x + " V" + q.t, "ln bold");
+            });
+          });
+          (res.edges || []).forEach(function (e) {
+            var m = info[e.id]; if (!m || (m.kind === "child" && buses[m.src])) return;
             (e.sections || []).forEach(function (sct) {
               var d = "M" + sct.startPoint.x + " " + sct.startPoint.y;
               (sct.bendPoints || []).forEach(function (b) { d += " L" + b.x + " " + b.y; });
