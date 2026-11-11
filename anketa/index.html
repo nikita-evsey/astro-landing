@@ -740,6 +740,8 @@
       ["partner", "супруг(а) / партнёр"], ["son", "сын"], ["daughter", "дочь"],
       ["adoptson", "приёмный сын"], ["adoptdaughter", "приёмная дочь"],
     ];
+    var KIND_SEX = { mother: "f", stepmother: "f", sister: "f", halfsister: "f", daughter: "f", adoptdaughter: "f",
+      father: "m", stepfather: "m", brother: "m", halfbrother: "m", son: "m", adoptson: "m" };
     var REL_ME = { mother: "Мама", father: "Папа", stepmother: "Мачеха", stepfather: "Отчим", brother: "Брат", sister: "Сестра",
       halfbrother: "Сводный брат", halfsister: "Сводная сестра", partner: "Супруг(а)", son: "Сын", daughter: "Дочь",
       adoptson: "Приёмный сын", adoptdaughter: "Приёмная дочь" };
@@ -803,6 +805,112 @@
         if (p.id === "me") return false;
         var us = unionsOf(p.id);
         return us.length > 0 && us.every(former) && !us.some(function (u) { return kidsOf(u).length; }) && !childrenOf(p.id).length && !parentsOf(p).length;
+      }
+      // ---------- родство «от натива» (relLabel) ----------
+      // В анкете родственника древо показано от него (id поменяны местами с нативом), сохранённые подписи «кем приходится» – от натива,
+      // поэтому подпись на карточке считается по связям. В основной анкете – сохранённая подпись, а если её нет – тоже по связям.
+      var view = it.kind === "relative";
+      function natId() { for (var i = 0; i < P.length; i++) if (P[i].native) return P[i].id; return null; }
+      function relLabel(p) {
+        if (!view && String(p.rel || "").trim()) return p.rel;
+        var k = kin(p.id); if (k) return k;
+        if (view && String(p.rel || "").trim()) return p.rel + " (для " + (pname(byId(natId()) || {}) || "натива") + ")";
+        return p.rel || "Кто?";
+      }
+      function sexOf(p, guard) {
+        if (!p) return "";
+        if (p.sex) return p.sex;
+        var r = String(p.rel || "").toLowerCase().trim(), w = r.split(/[\s(–-]/)[0];
+        if (r.indexOf("супруг(а)") !== 0) {
+          if (/^(мама|мать|бабушка|прабабушка|прапрабабушка|сестра|дочь|жена|тётя|тетя|мачеха|племянница|внучка|правнучка|супруга|крёстная|крестная|бывшая|двоюродная|сводная|приёмная|приемная|невестка|падчерица|партнёрша)$/.test(w)) return "f";
+          if (/^(папа|отец|дедушка|прадедушка|прапрадедушка|брат|сын|муж|дядя|отчим|племянник|внук|правнук|супруг|крёстный|крестный|бывший|двоюродный|сводный|приёмный|приемный|зять|пасынок|партнёр)$/.test(w)) return "m";
+        }
+        var d = p.id === "me" ? { first: state.data.first_name, married: state.data.married_name } : p;
+        if (String(d.married || "").trim()) return "f";
+        if (!guard) for (var i = 0, us = unionsOf(p.id); i < us.length; i++) { var o = sexOf(byId(other(us[i], p.id)), 1); if (o) return o === "f" ? "m" : "f"; }
+        var n = String(d.first || "").trim().toLowerCase();
+        if (n) return /[ая]$/.test(n) && !/^(илья|никита|кузьма|фома|лука|савва|данила|миша|саша|женя|валя|паша|гоша|лёша|алёша|дима|вова|петя|коля|толя|костя|сеня|ваня|федя|боря)$/.test(n) ? "f" : "m";
+        return "";
+      }
+      // Предки: id -> { up, via (родитель, через которого), step, adopted }.
+      function ancestors(id) {
+        var out = {}, q = [id]; out[id] = { up: 0, via: null, step: false, adopted: false };
+        while (q.length) {
+          var c = q.shift(), cu = out[c]; if (cu.up > 6) continue;
+          parentsOf(byId(c)).forEach(function (pid) {
+            if (out[pid] || !byId(pid)) return;
+            out[pid] = { up: cu.up + 1, via: cu.up === 0 ? pid : cu.via, step: cu.step || !!byId(pid).step, adopted: cu.adopted || !!(byId(c) || {}).adopted };
+            q.push(pid);
+          });
+        }
+        return out;
+      }
+      var GEN = { "брат": "брата", "сестра": "сестры", "сын": "сына", "дочь": "дочери", "папа": "папы", "мама": "мамы", "дядя": "дяди", "тётя": "тёти",
+        "дедушка": "дедушки", "бабушка": "бабушки", "внук": "внука", "внучка": "внучки", "племянник": "племянника", "племянница": "племянницы",
+        "двоюродный": "двоюродного", "двоюродная": "двоюродной", "сводный": "сводного", "сводная": "сводной", "приёмный": "приёмного", "приёмная": "приёмной" };
+      // Родительный падеж подписи: «прадедушка по маме» -> «прадедушки по маме»; не знаем слово – в скобках.
+      function gen(label) {
+        var ws = String(label).toLowerCase().split(" "), ok = true;
+        for (var i = 0; i < ws.length && i < 2; i++) {
+          if (/^(по|маме|папе)$/.test(ws[i])) break;
+          var m = /^((?:пра)*)(.*)$/.exec(ws[i]);
+          if (GEN[m[2]]) ws[i] = m[1] + GEN[m[2]]; else if (i === 0) ok = false;
+          if (!/(ый|ая)$/.test(m[2])) break;
+        }
+        return ok ? ws.join(" ") : "(" + String(label).toLowerCase() + ")";
+      }
+      function kin(id, guard) {
+        if (id === "me" || !byId(id)) return "";
+        var t = byId(id), sx = sexOf(t);
+        var g = function (f, m, n) { return sx === "f" ? f : sx === "m" ? m : n; };
+        var A = ancestors("me"), B = ancestors(id), best = null;
+        Object.keys(A).forEach(function (c) { if (B[c] && (!best || A[c].up + B[c].up < best.up + best.down)) best = { c: c, up: A[c].up, down: B[c].up }; });
+        var side = function (via) { var s = sexOf(byId(via)); return s === "f" ? " по маме" : s === "m" ? " по папе" : ""; };
+        var pra = function (n) { return n > 0 ? new Array(n + 1).join("пра") : ""; };
+        var cap = function (x) { return x.charAt(0).toUpperCase() + x.slice(1); };
+        if (best && !(A[best.c].step && best.down)) {
+          var up = best.up, dn = best.down;
+          if (dn === 0) {
+            // Отчим / мачеха кого-то выше по линии: «Отчим мамы», а не «дедушка».
+            if (up > 1 && byId(id).step) {
+              var ch = Object.keys(A).filter(function (c) { return A[c].up === up - 1 && parentsOf(byId(c)).indexOf(id) >= 0; })[0];
+              var kc = ch && (ch === "me" ? "" : kin(ch, 1));
+              if (kc) return g("Мачеха ", "Отчим ", "Отчим / мачеха ") + gen(kc);
+            }
+            if (up === 1) return A[id].step ? g("Мачеха", "Отчим", "Отчим / мачеха") : (A.me.adopted || (byId("me") || {}).adopted ? g("Приёмная мама", "Приёмный папа", "Приёмный родитель") : g("Мама", "Папа", "Родитель"));
+            return cap(pra(up - 2) + g("бабушка", "дедушка", "бабушка / дедушка")) + side(A[id].via);
+          }
+          if (up === 0) {
+            if (dn === 1) return t.adopted ? g("Приёмная дочь", "Приёмный сын", "Приёмный ребёнок") : g("Дочь", "Сын", "Ребёнок");
+            return cap(pra(dn - 2) + g("внучка", "внук", "внук / внучка"));
+          }
+          if (up === 1 && dn === 1) {
+            var pa = parentsOf(byId("me")).filter(function (x) { return !(byId(x) || {}).step; }), pb = parentsOf(t).filter(function (x) { return !(byId(x) || {}).step; });
+            var shared = pa.filter(function (x) { return pb.indexOf(x) >= 0; }).length, full = shared >= 2 || (shared === pa.length && shared === pb.length);
+            return full ? g("Сестра", "Брат", "Брат / сестра") : g("Сводная сестра", "Сводный брат", "Сводный брат / сестра");
+          }
+          if (dn === 1) return cap(up > 2 ? "двоюродн" + g("ая ", "ый ", "ый(ая) ") + pra(up - 3) + g("бабушка", "дедушка", "дедушка / бабушка") : g("тётя", "дядя", "тётя / дядя")) + side(A[best.c].via);
+          if (up === 1) return cap((dn > 2 ? "внучат" + g("ая ", "ый ", "ый(ая) ") : "") + g("племянница", "племянник", "племянник / племянница"));
+          if (up === 2 && dn === 2) return g("Двоюродная сестра", "Двоюродный брат", "Двоюродный брат / сестра");
+          if (up === 3 && dn === 3) return g("Троюродная сестра", "Троюродный брат", "Троюродный брат / сестра");
+          return g("Родственница", "Родственник", "Родственник");
+        }
+        // Не кровные: супруг(а) натива, дети супруга, супруги родственников.
+        var us = unionsOf(id);
+        for (var i = 0; i < us.length; i++) {
+          var o = other(us[i], id), fm = former(us[i]), rel = us[i].kind === "relationship";
+          if (o === "me") return rel ? g("Партнёрша", "Партнёр", "Партнёр") + (fm ? " (бывш.)" : "") : (fm ? g("Бывшая жена", "Бывший муж", "Бывший супруг(а)") : g("Жена", "Муж", "Супруг(а)"));
+        }
+        var spouses = unionsOf("me").map(function (u) { return other(u, "me"); });
+        if (parentsOf(t).some(function (x) { return spouses.indexOf(x) >= 0; })) return g("Падчерица", "Пасынок", "Пасынок / падчерица");
+        if (!guard) for (var j = 0; j < us.length; j++) {
+          var o2 = other(us[j], id), k2 = kin(o2, 1); if (!k2) continue;
+          var w2 = k2.toLowerCase();
+          if (w2 === "сын") return g("Невестка", "Муж сына", "Супруг(а) сына");
+          if (w2 === "дочь") return g("Жена дочери", "Зять", "Супруг(а) дочери");
+          return (former(us[j]) ? g("Бывшая жена ", "Бывший муж ", "Бывший супруг(а) ") : g("Жена ", "Муж ", "Супруг(а) ")) + gen(k2);
+        }
+        return "";
       }
       // Старое древо: partners -> браки.
       P.forEach(function (p) {
@@ -894,10 +1002,12 @@
 
       function cardText(p) {
         if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: pname(state.data) || it.label, married: hasMarriage("me") ? state.data.married_name || "" : "",
-          born: state.data.birth_date ? "р. " + state.data.birth_date.split("-").reverse().join(".") : "", bplace: state.data.birth_place || "" };
-        return { rel: p.rel || "Кто?", name: pname(p), married: hasMarriage(p.id) ? p.married || "" : "", born: fmtParts(p.birth) ? "р. " + fmtParts(p.birth) : "", bplace: p.place || "",
+          born: dstr(state.data.birth_date) ? "р. " + dstr(state.data.birth_date) : "", bplace: state.data.birth_place || "",
+          died: dstr(state.data.death_date) ? "† " + dstr(state.data.death_date) : "", dplace: state.data.death_place || "" };
+        return { rel: relLabel(p), name: pname(p), married: hasMarriage(p.id) ? p.married || "" : "", born: fmtParts(p.birth) ? "р. " + fmtParts(p.birth) : "", bplace: p.place || "",
           died: fmtParts(p.death) ? "† " + fmtParts(p.death) : (p.dead ? "† дата неизвестна" : ""), dplace: p.death_place || "" };
       }
+      function dstr(v) { return typeof v === "string" ? (v ? v.split("-").reverse().join(".") : "") : fmtParts(v); }
       function nm(o) { if (!o) return "?"; var t = cardText(o); return o.id === "me" ? (t.name || "натив") : t.rel + (t.name ? " " + t.name : ""); }
 
       function draw() {
@@ -1069,13 +1179,16 @@
           if (arr(p, "parents").indexOf(x.id) < 0) p.parents.push(x.id);
           if (kind.indexOf("adopt") === 0) p.adopted = true; else delete p.adopted;   // приёмный ребёнок – пунктир к родителям
         }
-        if (!String(p.rel || "").trim()) p.rel = relFor(kind, x);
+        if (!String(p.rel || "").trim() && !view) p.rel = relFor(kind, x);
+        if (KIND_SEX[kind] && !p.sex) p.sex = KIND_SEX[kind];
         changed(); draw(); showPanel();
       }
 
       // Добавить нового родственника к человеку x (u – брак, если это общий ребёнок пары).
       function addKind(kind, x, u) {
-        var id = newId(), p = { id: id, rel: relFor(kind, x), first: "", parents: [] };
+        // В анкете родственника подписи считаются от него (relLabel) – «кем приходится нативу» не угадываем, оставляем пустым.
+        var id = newId(), p = { id: id, rel: view ? "" : relFor(kind, x), first: "", parents: [] }, sx = KIND_SEX[kind];
+        if (sx) p.sex = sx;
         if (kind === "mother" || kind === "father" || kind === "stepmother" || kind === "stepfather") {
           if (x.same) { x.parents = parentsOf(x).slice(); x.sib = x.same; delete x.same; }
           if (kind.indexOf("step") === 0) p.step = true;
@@ -1148,12 +1261,12 @@
         while (panel.firstChild) panel.removeChild(panel.firstChild);
         var p = sel && byId(sel);
         if (!p) { panel.appendChild(el("div", { class: "ak-hint", text: ro ? "Нажмите на человека, чтобы посмотреть." : "Нажмите на человека, чтобы заполнить или добавить к нему родственника. Начните с себя: «+ мама», «+ папа»…" })); return; }
-        var head = el("div", { class: "ak-row" }, [el("b", { text: p.id === "me" ? cardText(p).name || "Вы" : (p.rel || "Родственник") + (pname(p) ? " – " + pname(p) : "") }),
+        var head = el("div", { class: "ak-row" }, [el("b", { text: p.id === "me" ? cardText(p).name || "Вы" : relLabel(p) + (pname(p) ? " – " + pname(p) : "") }),
           el("button", { class: "ak-link", style: "font-size:14px", text: "Закрыть", onclick: function () { sel = null; draw(); showPanel(); } })]);
         panel.appendChild(head);
         if (p.id !== "me") {
           var grid = el("div", { class: "ak-form ak-tree-fields" });
-          [["rel", "Кем приходится", "text", REL_SUGGEST], ["first", "Имя", "text"], ["last", "Фамилия", "text"]].concat(hasMarriage(p.id) ? [["married", "Фамилия после замужества", "text"]] : []).concat([
+          [["rel", view ? "Кем приходится для " + (pname(byId(natId()) || {}) || "основной анкеты") : "Кем приходится", "text", REL_SUGGEST], ["first", "Имя", "text"], ["last", "Фамилия", "text"]].concat(hasMarriage(p.id) ? [["married", "Фамилия после замужества", "text"]] : []).concat([
            ["birth", "Дата рождения", "date3"], ["time", "Время рождения", "time"], ["place", "Место рождения", "text"],
            ["death", "Дата смерти", "date3"], ["death_place", "Место смерти", "text"]]).forEach(function (d) {
             var w = el("div", { class: "fld" + (d[2] === "date3" ? " d3cell" : "") }), inp;
@@ -1193,9 +1306,11 @@
         } else {
           var mg = el("div", { class: "ak-form ak-tree-fields" });
           var byField = {}; it.fields.forEach(function (x) { if (x.id) byField[x.id] = x; });
-          ["first_name", "last_name", "married_name", "birth_date", "birth_time", "birth_place"].forEach(function (k) {
-            var fd = byField[k]; if (!fd || (k === "married_name" && !hasMarriage("me"))) return;
-            var w = el("div", { class: "fld" }), inp = input({ id: "me-" + k, type: fd.type }, state.data[k], function (v) {
+          ["first_name", "last_name", "married_name", "birth_date", "birth_time", "birth_place", "death_date", "death_place"].forEach(function (k) {
+            // Даты частями (анкета родственника) – только в форме выше: два одинаковых поля не синхронизировать.
+            var fd = byField[k]; if (!fd || fd.type === "date3" || (k === "married_name" && !hasMarriage("me"))) return;
+            var w = el("div", { class: "fld" }), inp;
+            inp = input({ id: "me-" + k, type: fd.type }, state.data[k], function (v) {
               state.data[k] = v; changed(); draw();
               var main = document.querySelector('#ak [data-f="' + k + '"]'); if (main && main.value !== v) main.value = v;
             });
@@ -1250,7 +1365,7 @@
       }
 
       state.onField = function (k) {
-        if (!/^(first_name|last_name|married_name|birth_date|birth_place)$/.test(k)) return;
+        if (!/^(first_name|last_name|married_name|birth_date|birth_place|death_date|death_place)$/.test(k)) return;
         draw();
         if (sel === "me") showPanel();   // фокус – в поле анкеты выше, карточку можно перерисовать
       };
@@ -1284,6 +1399,14 @@
           if (f.hint) form.appendChild(el("div", { class: "ak-hint wide", text: f.hint }));
         } else if (f.type === "rows") form.appendChild(rowsField(f));
         else if (f.type === "tree") form.appendChild(treeField(f));
+        else if (f.type === "date3") {   // дата частями (анкета родственника: даты рождения и смерти)
+          var dw = el("div", { class: "fld d3cell" });
+          dw.appendChild(el("label", { class: f.required ? "req" : "", text: f.label }));
+          var dn = dateInput(state.data[f.id], function (v) { state.data[f.id] = v; changed(); if (state.onField) state.onField(f.id); });
+          dn.setAttribute("data-f", f.id); dw.appendChild(dn);
+          if (f.hint) dw.appendChild(el("div", { class: "ak-hint", text: f.hint }));
+          form.appendChild(dw);
+        }
         else if (["text", "textarea", "select", "date", "time"].indexOf(f.type) >= 0) {   // date3 – только в строках и древе
           if (f.group) {
             if (!groups[f.group]) {
@@ -1320,9 +1443,9 @@
       if (!state.dirty || !state.item || state.cab.locked) return Promise.resolve();
       state.dirty = false;
       var id = state.item.id, sentData = JSON.stringify(state.data);
-      return api("/save", { id: id, rev: state.rev, data: state.data })
+      return api("/save", { id: id, rev: state.rev, data: state.data, tree_rev: state.item.tree_rev })
         .then(function (r) {
-          state.rev = r.rev; setSave("Сохранено " + when(r.updated_at));
+          state.rev = r.rev; if (r.tree_rev) state.item.tree_rev = r.tree_rev; setSave("Сохранено " + when(r.updated_at));
           if (JSON.stringify(state.data) === sentData) lsDel(id); else lsPut(id, state.data, state.rev);
         })
         .catch(function (e) {
@@ -1335,8 +1458,8 @@
       var err = document.getElementById("ak-err"); err.textContent = "";
       clearTimeout(state.timer); state.dirty = false;
       var id = state.item.id;
-      api("/submit", { id: id, rev: state.rev, data: state.data }).then(function (r) {
-        lsDel(id); state.rev = r.rev;
+      api("/submit", { id: id, rev: state.rev, data: state.data, tree_rev: state.item.tree_rev }).then(function (r) {
+        lsDel(id); state.rev = r.rev; if (r.tree_rev) state.item.tree_rev = r.tree_rev;
         clear();
         root.appendChild(el("h1", { text: "Спасибо!" }));
         root.appendChild(el("p", { text: r.all_done ? "Все анкеты у Никиты. Если что-то вспомните – их можно поправить по этой же ссылке до звонка." : "Анкета у Никиты. Осталось заполнить остальные анкеты." }));
@@ -1346,7 +1469,7 @@
         if (/другом окне|другом устройстве/.test(e.message)) { lsDel(id); alert(e.message); openItem(id); return; }
         err.textContent = e.message;
         // Сервер сохранил введённое как черновик и вернул новую версию.
-        api("/item?id=" + id).then(function (it) { state.rev = it.rev; }).catch(function () {});
+        api("/item?id=" + id).then(function (it) { state.rev = it.rev; if (it.tree_rev) state.item.tree_rev = it.tree_rev; }).catch(function () {});
       });
     }
 
