@@ -368,7 +368,9 @@
     .ak-form .ak-d3 input.d3-y, .ak-d3 input.d3-y { width: 60px; padding: 6px 4px; text-align: center; }
     .ak-form .ak-d3 select.d3-m, .ak-d3 select.d3-m { width: auto; min-width: 92px; flex: 1; }
     .ak-d3 input, .ak-d3 select { height: 34px; font: inherit; font-size: 14px; border: 1px solid var(--rule); border-radius: 6px; background: #fff; }
-    .ak-d3-a { display: inline-flex !important; gap: 3px; align-items: center; font-size: 12px !important; font-weight: 400 !important; white-space: nowrap; margin: 0 !important; color: var(--muted); }
+    .ak-d3-a { display: inline-flex !important; gap: 3px; align-items: center; font-size: 12px !important; font-weight: 400 !important; white-space: nowrap; margin: 0 !important; color: var(--ink); opacity: .4; }
+    .ak-d3-a:has(input:checked) { opacity: 1; }
+    #ak input[type=checkbox] { accent-color: #1f1f1f; }
     .ak-d3-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
     .ak-form > .fld.d3cell { grid-column: span 2; }
     @media (max-width: 640px) { .ak-form > .fld.d3cell { grid-column: auto; } }
@@ -628,17 +630,11 @@
         if (m.value) o.m = +m.value;
         if (yy >= 1000 && yy <= 2100) o.y = yy;
         if (a.checked) o.approx = true;
-        if (v.note) o.note = v.note;
         v = o; onchange(o);
       }
       [d, y].forEach(function (n) { n.disabled = ro; n.addEventListener("input", upd); });
       [m, a].forEach(function (n) { n.disabled = ro; n.addEventListener("change", upd); });
       var box = el("div", { class: "ak-d3" }, [d, m, y, el("label", { class: "ak-d3-a", title: "Дата неточная" }, [a, " примерно"])]);
-      if (v.note) {
-        var nt = el("div", { class: "ak-d3-note" }, ["было записано: «" + v.note + "» ",
-          ro ? null : el("button", { type: "button", class: "ak-unlink", title: "Убрать запись", text: "×", onclick: function () { delete v.note; nt.remove(); upd(); } })]);
-        return el("div", {}, [box, nt]);
-      }
       return box;
     }
 
