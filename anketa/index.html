@@ -781,7 +781,7 @@
       if (!Array.isArray(T.unions)) T.unions = [];
       var U = T.unions;
       if (!P.some(function (p) { return p.id === "me"; })) P.unshift({ id: "me", parents: [] });
-      var sel = null, centered = false;
+      var sel = null, centered = false, lastCards = null;
       function byId(id) { for (var i = 0; i < P.length; i++) if (P[i].id === id) return P[i]; return null; }
       function newId() { var n = 1; while (byId("p" + n)) n++; return "p" + n; }
       function newUid() { var n = 1; while (U.some(function (u) { return u.id === "u" + n; })) n++; return "u" + n; }
@@ -913,6 +913,7 @@
           L.loose.forEach(function (p) { row.appendChild(card(p, cards)); });
           stage.appendChild(row);
         }
+        lastCards = cards;
         requestAnimationFrame(function () {
           lines(cards);
           // Первый показ: «это вы» – по центру (на телефоне древо шире экрана).
@@ -1248,6 +1249,10 @@
       };
       draw(); showPanel();
       window.addEventListener("resize", function () { if (document.body.contains(stage)) draw(); });
+      // Линии – по фактическим размерам карточек: шрифт догрузился, текст перенёсся – пересчитываем (иначе линии «съезжают»).
+      var relines = function () { if (lastCards && document.body.contains(stage)) lines(lastCards); };
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(relines);
+      if (window.ResizeObserver) { var ro2, tmr; ro2 = new ResizeObserver(function () { clearTimeout(tmr); tmr = setTimeout(relines, 30); }); ro2.observe(stage); }
       return box;
     }
 
