@@ -1005,18 +1005,20 @@
             groups[key].kids.push({ c: c, cp: cp, bold: bold[c.id + "|" + ps[i]] || bold[c.id + "|" + ps[j]] });
             done[ps[i]] = done[ps[j]] = true;
           }
-          ps.forEach(function (pid) {
-            if (done[pid]) return;
-            var pp = pos(pid), par = byId(pid); if (!pp || (par && par.step)) return;
-            var key = "p" + pid;
-            groups[key] = groups[key] || { x: pp.x, y: pp.b, b: pp.b, kids: [] };
-            groups[key].kids.push({ c: c, cp: cp, bold: bold[c.id + "|" + pid] });
-          });
+          // Родители без отмеченного брака – одна общая горизонталь (спуск от каждого), а не по линии от каждого.
+          var rest = ps.filter(function (pid) { var par = byId(pid); return !done[pid] && pos(pid) && !(par && par.step); });
+          if (!rest.length) return;
+          var key2 = "p" + rest.slice().sort().join("|"), pps = rest.map(pos);
+          groups[key2] = groups[key2] || { x: pps.reduce(function (a, q) { return a + q.x; }, 0) / pps.length, y: Math.max.apply(null, pps.map(function (q) { return q.b; })),
+            b: Math.max.apply(null, pps.map(function (q) { return q.b; })), drops: pps.map(function (q) { return { x: q.x, y: q.b }; }), kids: [] };
+          groups[key2].kids.push({ c: c, cp: cp, bold: rest.some(function (pid) { return bold[c.id + "|" + pid]; }) });
         });
         // По рядам родителей: пролёт шины и порядок высот.
         var rows2 = {};
         Object.keys(groups).forEach(function (k) {
-          var g = groups[k], xs = g.kids.map(function (q) { return q.cp.x; }).concat([g.x]);
+          var g = groups[k];
+          g.kids.forEach(function (q) { q.ax = Math.max(q.cp.l + 22, Math.min(q.cp.r - 22, g.x)); });
+          var xs = g.kids.map(function (q) { return q.ax; }).concat([g.x], (g.drops || []).map(function (d) { return d.x; }));
           g.lo = Math.min.apply(null, xs); g.hi = Math.max.apply(null, xs);
           g.top = Math.min.apply(null, g.kids.map(function (q) { return q.cp.t; }));
           var r = Math.round(g.b / 10); (rows2[r] = rows2[r] || []).push(g);
@@ -1036,10 +1038,12 @@
         });
         Object.keys(groups).forEach(function (k) {
           var g = groups[k];
-          path("M" + g.x + " " + g.y + " V" + g.busY + " H" + g.lo + " M" + g.x + " " + g.busY + " H" + g.hi, "ln");
+          if (g.drops && g.drops.length > 1) g.drops.forEach(function (d) { path("M" + d.x + " " + d.y + " V" + g.busY, "ln"); });
+          else path("M" + g.x + " " + g.y + " V" + g.busY, "ln");
+          path("M" + g.lo + " " + g.busY + " H" + g.hi, "ln");
           g.kids.forEach(function (q) {
-            path("M" + q.cp.x + " " + g.busY + " V" + q.cp.t, "ln");
-            if (q.bold) path("M" + g.x + " " + g.y + " V" + g.busY + " H" + q.cp.x + " V" + q.cp.t, "ln bold");
+            path("M" + q.ax + " " + g.busY + " V" + q.cp.t, "ln");
+            if (q.bold) path("M" + (g.drops && g.drops.length > 1 ? g.drops[0].x + " " + g.drops[0].y : g.x + " " + g.y) + " V" + g.busY + " H" + q.ax + " V" + q.cp.t, "ln bold");
           });
         });
         stage.insertBefore(svg, stage.firstChild);
