@@ -369,10 +369,10 @@
       return box;
     }
 
-    // Вход для Никиты: Telegram Login Widget (домен сайта привязан к боту в @BotFather -> /setdomain).
+    // Admin Login (вход Никиты): Telegram Login Widget (домен сайта привязан к боту в @BotFather -> /setdomain).
     function loginLink() {
       var box = el("div", { class: "ak-login" });
-      var a = el("button", { class: "ak-link ak-muted", text: "Вход для Никиты", onclick: function () {
+      var a = el("button", { class: "ak-link ak-muted", text: "Admin Login", onclick: function () {
         box.removeChild(a);
         var msg = el("div", { class: "ak-hint" });
         window.onTgAuth = function (user) {
