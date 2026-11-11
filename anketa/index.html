@@ -787,7 +787,8 @@
       function newUid() { var n = 1; while (U.some(function (u) { return u.id === "u" + n; })) n++; return "u" + n; }
       function arr(p, k) { if (!Array.isArray(p[k])) p[k] = []; return p[k]; }
       function parentsOf(p, d) { if (!p) return []; if (p.same && (d || 0) < 20) return parentsOf(byId(p.same), (d || 0) + 1); return arr(p, "parents"); }
-      function isMark(id) { return !!(it.marks && it.marks[it.id + ":" + id]); }
+      // Лояльность (решение Никиты 2026-11-11): отметка в карточке человека, видна и меняется всеми; старые отметки Никиты (marks) тоже учитываются.
+      function isMark(id) { var o = byId(id); return !!((o && o.loyal) || (it.marks && it.marks[it.id + ":" + id])); }
       function unionsOf(id) { return U.filter(function (u) { return u.a === id || u.b === id; }); }
       function other(u, id) { return u.a === id ? u.b : u.a; }
       function unionOf(a, b) { for (var i = 0; i < U.length; i++) if ((U[i].a === a && U[i].b === b) || (U[i].a === b && U[i].b === a)) return U[i]; return null; }
@@ -1229,14 +1230,14 @@
               .then(function (r) { p.anketa = r.id; changed(); return flush().then(function () { openItem(r.id); }); })
               .catch(function (e) { b.disabled = false; alert(e.message); });
           } }));
-          if (admin) {
-            var cb = el("input", { type: "checkbox" }); cb.checked = isMark(p.id);
-            cb.onchange = function () {
-              api("/mark", { anketa: it.id, person: p.id, loyal: cb.checked }).then(function (r) { it.marks = r.marks; draw(); })
-                .catch(function (e) { cb.checked = !cb.checked; alert(e.message); });
-            };
-            ops.appendChild(el("label", { class: "ak-loyal" }, [cb, " ★ Лояльность – сильно влияет на натива (видит только Никита)"]));
-          }
+          var cb = el("input", { type: "checkbox" }); cb.checked = isMark(p.id); cb.disabled = ro;
+          cb.onchange = function () {
+            if (cb.checked) p.loyal = true; else delete p.loyal;
+            // Старая отметка Никиты (marks) – снимаем тоже, иначе галочка не снимется.
+            if (!cb.checked && it.marks && it.marks[it.id + ":" + p.id]) api("/mark", { anketa: it.id, person: p.id, loyal: false }).then(function (r) { it.marks = r.marks; draw(); }).catch(function () {});
+            changed(); draw();
+          };
+          ops.appendChild(el("label", { class: "ak-loyal" }, [cb, " ★ Лояльность – человек сильно влияет на натива"]));
           if (!ro) ops.appendChild(el("button", { class: "ak-link", style: "font-size:14px", text: "Удалить из древа", onclick: function () { remove(p); } }));
         }
         panel.appendChild(ops);
