@@ -1125,18 +1125,26 @@
               return r;
             };
             var L2 = zone(-1), R2 = zone(1);
-            // Прямые предки и вплотную к ним их другие супруги: снаружи своей пары (у женщины – слева, у мужчины – справа).
+            // Прямые предки парами; другие супруги обоих – вплотную к паре с наружной стороны (мамина линия – слева, папина – справа),
+            // пару не разрывают. Ближе – супруги того, кто стоит с краю; у каждого текущий ближе, потом без своих семей.
             var center = [];
-            pedL.forEach(function (pid, i) {
-              var pr = partners(pid, g).map(function (z) { return z.id; });
-              var dir = pedL[i + 1] && pr.indexOf(pedL[i + 1]) >= 0 ? -1 : pedL[i - 1] && pr.indexOf(pedL[i - 1]) >= 0 ? 1 : (side[pid] || 1);
-              var sp = partners(pid, g).filter(function (z) { return !ped[z.id] && att[z.id] && att[z.id].id === pid; });
-              var more = function (id) { return items.some(function (o) { return att[o] && att[o].id === id; }) ? 1 : 0; };
-              sp.sort(function (a, b) { return (b.cur ? 1 : 0) - (a.cur ? 1 : 0) || more(a.id) - more(b.id) || by(a.id) - by(b.id); });   // ближе – текущий, потом без своих семей
-              var blk = [pid];
-              sp.forEach(function (z) { var u = unit(z.id, dir); blk = dir < 0 ? u.concat(blk) : blk.concat(u); });
+            var more = function (id) { return items.some(function (o) { return att[o] && att[o].id === id; }) ? 1 : 0; };
+            for (var i = 0; i < pedL.length; i++) {
+              var a = pedL[i], b = pedL[i + 1], pair = b && partners(a, g).some(function (z) { return z.id === b; }) ? [a, b] : [a];
+              if (pair.length === 2) i++;
+              // Пара родителей натива (мама слева, папа справа) – у каждого своя сторона; пары выше – вся пара на одной стороне.
+              var split = pair.length === 2 && (side[pair[0]] || 1) !== (side[pair[1]] || 1);
+              var blk = pair.slice();
+              [-1, 1].forEach(function (s) {
+                var who = split ? pair.filter(function (pid) { return (side[pid] || 1) === s; }) : ((side[a] || 1) === s ? (s < 0 ? pair : pair.slice().reverse()) : []);
+                who.forEach(function (pid) {
+                  partners(pid, g).filter(function (z) { return !ped[z.id] && att[z.id] && att[z.id].id === pid; })
+                    .sort(function (x1, x2) { return (x2.cur ? 1 : 0) - (x1.cur ? 1 : 0) || more(x1.id) - more(x2.id) || by(x1.id) - by(x2.id); })
+                    .forEach(function (z) { var u = unit(z.id, s); blk = s < 0 ? u.concat(blk) : blk.concat(u); });
+                });
+              });
               center = center.concat(blk);
-            });
+            }
             out = L2.concat(center, R2);
           } else {
             // Ряд натива и ниже: группы детей одной пары – по месту родителей.
