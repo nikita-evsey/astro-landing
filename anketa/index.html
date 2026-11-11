@@ -318,6 +318,38 @@
       .ak-tr > .ak-ops { position: absolute; right: 0; top: 8px; flex-direction: column; }
       .ak-tr { position: relative; padding-right: 28px; }
     }
+    /* Семейное древо */
+    .ak-tree-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: #fffb; padding: 10px 6px; }
+    .ak-tree-stage { position: relative; min-width: max-content; margin: 0 auto; }
+    .ak-tree-svg { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+    .ak-tree-svg .ln { fill: none; stroke: #9a9183; stroke-width: 1.4; }
+    .ak-tree-svg .ln.step { stroke-dasharray: 5 4; }
+    .ak-tree-svg .ln.partner { stroke-dasharray: 2 3; }
+    .ak-tree-svg .ln.bold { stroke: var(--accent); stroke-width: 4; stroke-dasharray: none; }
+    .ak-gen span { background: #fffb; padding: 0 6px; border-radius: 4px; position: relative; z-index: 1; }
+    .ak-gen { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; text-align: center; margin: 6px 0 4px; position: relative; }
+    .ak-tree-row { display: flex; justify-content: center; gap: 14px; padding: 0 8px 22px; position: relative; }
+    .ak-person { position: relative; z-index: 1; width: 148px; min-height: 58px; text-align: left; font: inherit; background: #fff; border: 1px solid var(--rule); border-radius: 8px; padding: 5px 8px; cursor: pointer; display: flex; flex-direction: column; gap: 1px; }
+    .ak-person .r { font-size: 11px; color: var(--muted); line-height: 1.2; }
+    .ak-person .n { font-size: 13px; font-weight: 600; line-height: 1.25; }
+    .ak-person .d { font-size: 11px; color: var(--ink); line-height: 1.2; }
+    .ak-person .a { position: absolute; right: 5px; top: 4px; font-size: 10px; color: var(--accent); }
+    .ak-person.me { background: #f3ece1; border-color: var(--ink); }
+    .ak-person.dead { background: #f1f0ee; }
+    .ak-person.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+    .ak-person.loyal { border: 3px solid var(--accent); }
+    .ak-person.loyal .r { color: var(--accent); font-weight: 700; }
+    .ak-tree-panel { margin-top: 10px; border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; background: var(--box); }
+    .ak-tree-fields { margin-top: 8px; }
+    .ak-tree-add { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+    .ak-chip { font: inherit; font-size: 13px; border: 1px solid var(--rule); border-radius: 99px; background: #fff; padding: 3px 10px; cursor: pointer; }
+    .ak-chip:hover { border-color: var(--accent); }
+    .ak-tree-ops { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-top: 10px; }
+    .ak-tree-ops .ak-btn { font-size: 14px; padding: 6px 12px; }
+    .ak-loyal { font-size: 14px; font-weight: 600; color: var(--accent); }
+    .ak-check-inline { display: inline-flex !important; gap: 4px; align-items: center; margin: 0 12px 0 0 !important; font-weight: 400 !important; font-size: 13px !important; }
+    .ak-from { font-size: 14px; background: var(--box); border-radius: 8px; padding: 8px 12px; margin: 6px 0 10px; }
+    @media (max-width: 640px) { .ak-person { width: 124px; } .ak-tree-row { gap: 8px; } }
     .ak-ex { font-size: 13px; color: var(--muted); margin: 4px 0 8px; padding-left: 18px; }
     .ak-ex li { margin: 2px 0; }
     .ak-bar { position: sticky; bottom: 0; background: var(--paper); border-top: 1px solid var(--rule); padding: 8px 0; margin-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
@@ -591,12 +623,266 @@
       return box;
     }
 
+    // ---------- семейное древо (решение Никиты 2026-11-11) ----------
+    // Данные: state.data.tree.people; «me» – человек анкеты. Связи: parents (родители; step – отчим/мачеха),
+    // partners, same (брат/сестра с теми же родителями), sib (сводный: брат/сестра, родители – свои).
+    // Поколения считаются от «me», в ряду – по положению родни; линии рисуются SVG поверх карточек.
+    var KINDS = [
+      ["mother", "мать"], ["father", "отец"], ["stepmother", "мачеха"], ["stepfather", "отчим"],
+      ["brother", "брат"], ["sister", "сестра"], ["halfbrother", "сводный брат"], ["halfsister", "сводная сестра"],
+      ["partner", "партнёр"], ["son", "сын"], ["daughter", "дочь"],
+    ];
+    var REL_ME = { mother: "Мама", father: "Папа", stepmother: "Мачеха", stepfather: "Отчим", brother: "Брат", sister: "Сестра",
+      halfbrother: "Сводный брат", halfsister: "Сводная сестра", partner: "Партнёр", son: "Сын", daughter: "Дочь" };
+    var REL_SUGGEST = ["Мама", "Папа", "Отчим", "Мачеха", "Брат", "Сестра", "Сводный брат", "Сводная сестра", "Партнёр", "Муж", "Жена", "Бывший муж", "Бывшая жена",
+      "Сын", "Дочь", "Бабушка по маме", "Дедушка по маме", "Бабушка по папе", "Дедушка по папе", "Тётя по маме", "Дядя по маме", "Тётя по папе", "Дядя по папе",
+      "Прабабушка", "Прадедушка", "Двоюродный брат", "Двоюродная сестра", "Крёстная", "Крёстный"];
+    var GEN_NAME = { 3: "Прабабушки и прадедушки", 2: "Бабушки и дедушки", 1: "Родители", 0: "Поколение", "-1": "Дети", "-2": "Внуки" };
+
+    function relFor(kind, x) {
+      if (x.id === "me") return REL_ME[kind];
+      var r = String(x.rel || "").trim(), lr = r.toLowerCase(), side = null;
+      if (/^(мама|мать)$/.test(lr)) side = "по маме";
+      if (/^(папа|отец)$/.test(lr)) side = "по папе";
+      if (side) return { mother: "Бабушка " + side, father: "Дедушка " + side, brother: "Дядя " + side, sister: "Тётя " + side,
+        halfbrother: "Дядя " + side + " (сводный)", halfsister: "Тётя " + side + " (сводная)" }[kind] || (REL_ME[kind] + " – " + lr);
+      if (/^(бабушка|дедушка)/.test(lr) && (kind === "mother" || kind === "father")) return (kind === "mother" ? "Прабабушка" : "Прадедушка") + " (" + lr + ")";
+      if (/^(брат|сестра)$/.test(lr) && (kind === "son" || kind === "daughter")) return kind === "son" ? "Племянник" : "Племянница";
+      if (/^(сын|дочь)$/.test(lr) && (kind === "son" || kind === "daughter")) return kind === "son" ? "Внук" : "Внучка";
+      return REL_ME[kind] + (r || x.name ? " – " + (r || x.name).toLowerCase() : "");
+    }
+
+    function treeField(f) {
+      var it = state.item, ro = state.cab.locked, admin = !!it.marks;
+      var box = el("div", { class: "ak-tree wide" });
+      if (!state.data.tree || !Array.isArray(state.data.tree.people)) state.data.tree = { people: [] };
+      var P = state.data.tree.people;
+      if (!P.some(function (p) { return p.id === "me"; })) P.unshift({ id: "me", parents: [], partners: [] });
+      var sel = null, centered = false;
+      function byId(id) { for (var i = 0; i < P.length; i++) if (P[i].id === id) return P[i]; return null; }
+      function newId() { var n = 1; while (byId("p" + n)) n++; return "p" + n; }
+      function arr(p, k) { if (!Array.isArray(p[k])) p[k] = []; return p[k]; }
+      function parentsOf(p, d) { if (!p) return []; if (p.same && (d || 0) < 20) return parentsOf(byId(p.same), (d || 0) + 1); return arr(p, "parents"); }
+      function isMark(id) { return !!(it.marks && it.marks[it.id + ":" + id]); }
+
+      // Поколения и порядок в ряду: обход от «me» по всем связям.
+      function layout() {
+        var gen = {}, x = {}, q = ["me"]; gen.me = 0; x.me = 0;
+        function visit(id, g, px) { if (gen[id] != null || !byId(id)) return; gen[id] = g; x[id] = px; q.push(id); }
+        while (q.length) {
+          var id = q.shift(), p = byId(id), g = gen[id], px = x[id];
+          var ps = parentsOf(p); ps.forEach(function (pid, i) { visit(pid, g + 1, px + (i - (ps.length - 1) / 2) * 1.1); });
+          arr(p, "partners").forEach(function (pid, i) { visit(pid, g, px + 1 + i * 0.6); });
+          var kids = P.filter(function (c) { return parentsOf(c).indexOf(id) >= 0; });
+          kids.forEach(function (c, i) { visit(c.id, g - 1, px + (i - (kids.length - 1) / 2) * 1.1); });
+          var sibs = P.filter(function (c) { return c.same === id || c.sib === id || (p.same && c.id === p.same) || (p.sib && c.id === p.sib); });
+          sibs.forEach(function (c, i) { visit(c.id, g, px - 1 - i * 0.6); });
+          P.filter(function (c) { return arr(c, "partners").indexOf(id) >= 0; }).forEach(function (c) { visit(c.id, g, px + 1); });
+        }
+        var rows = {}, loose = [];
+        P.forEach(function (p) { if (gen[p.id] == null) loose.push(p); else (rows[gen[p.id]] = rows[gen[p.id]] || []).push(p); });
+        Object.keys(rows).forEach(function (g) { rows[g].sort(function (a, b) { return x[a.id] - x[b.id]; }); });
+        return { rows: rows, loose: loose };
+      }
+
+      // Путь от лояльного человека к «me» – жирные линии.
+      function boldEdges() {
+        var bold = {};
+        P.forEach(function (p) {
+          if (!isMark(p.id)) return;
+          var prev = {}, q = [p.id]; prev[p.id] = null;
+          while (q.length) {
+            var id = q.shift(); if (id === "me") break;
+            var c = byId(id), nb = parentsOf(c).concat(arr(c, "partners"));
+            P.forEach(function (o) { if (parentsOf(o).indexOf(id) >= 0 || arr(o, "partners").indexOf(id) >= 0) nb.push(o.id); });
+            nb.forEach(function (n) { if (!(n in prev) && byId(n)) { prev[n] = id; q.push(n); } });
+          }
+          for (var cur = "me"; cur && prev[cur] !== undefined && prev[cur] !== null; cur = prev[cur]) { bold[cur + "|" + prev[cur]] = bold[prev[cur] + "|" + cur] = true; }
+        });
+        return bold;
+      }
+
+      var wrap = el("div", { class: "ak-tree-scroll" }), stage = el("div", { class: "ak-tree-stage" }), panel = el("div", { class: "ak-tree-panel" });
+      wrap.appendChild(stage); box.appendChild(wrap); box.appendChild(panel);
+
+      function cardText(p) {
+        if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: state.data.name || it.label, dates: state.data.birth_date ? "р. " + state.data.birth_date.split("-").reverse().join(".") : "" };
+        return { rel: p.rel || "Кто?", name: p.name || "", dates: [p.birth ? "р. " + p.birth : "", p.death ? "† " + p.death : ""].filter(Boolean).join(" · ") };
+      }
+
+      function draw() {
+        while (stage.firstChild) stage.removeChild(stage.firstChild);
+        var L = layout(), cards = {};
+        var gens = Object.keys(L.rows).map(Number).sort(function (a, b) { return b - a; });
+        gens.forEach(function (g) {
+          stage.appendChild(el("div", { class: "ak-gen" }, [el("span", { text: GEN_NAME[g] || (g > 0 ? "Предки" : "Потомки") })]));
+          var row = el("div", { class: "ak-tree-row" });
+          L.rows[g].forEach(function (p) { row.appendChild(card(p, cards)); });
+          stage.appendChild(row);
+        });
+        if (L.loose.length) {
+          stage.appendChild(el("div", { class: "ak-gen" }, [el("span", { text: "Не связаны с древом – откройте и добавьте связь или впишите, кем приходится" })]));
+          var row = el("div", { class: "ak-tree-row" });
+          L.loose.forEach(function (p) { row.appendChild(card(p, cards)); });
+          stage.appendChild(row);
+        }
+        requestAnimationFrame(function () {
+          lines(cards);
+          // Первый показ: «это вы» – по центру (на телефоне древо шире экрана).
+          if (!centered && cards.me) { centered = true; wrap.scrollLeft = cards.me.offsetLeft + cards.me.offsetWidth / 2 - wrap.clientWidth / 2; }
+        });
+      }
+
+      function card(p, cards) {
+        var t = cardText(p), c = el("button", { type: "button", class: "ak-person" + (p.id === "me" ? " me" : "") + (sel === p.id ? " sel" : "") + (isMark(p.id) ? " loyal" : "") + (p.death ? " dead" : ""),
+          onclick: function () { sel = sel === p.id ? null : p.id; draw(); showPanel(); } }, [
+          el("span", { class: "r", text: (isMark(p.id) ? "★ " : "") + t.rel }),
+          el("span", { class: "n", text: t.name || "Имя?" }),
+          t.dates ? el("span", { class: "d", text: t.dates }) : null,
+          p.anketa ? el("span", { class: "a", text: "анкета" }) : null,
+        ]);
+        cards[p.id] = c;
+        return c;
+      }
+
+      function lines(cards) {
+        var old = stage.querySelector("svg"); if (old) old.remove();
+        var W = stage.scrollWidth, H = stage.scrollHeight, base = stage.getBoundingClientRect(), bold = boldEdges();
+        var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("class", "ak-tree-svg");
+        function pos(id) { var c = cards[id]; if (!c) return null; var r = c.getBoundingClientRect(); return { x: r.left - base.left + r.width / 2, t: r.top - base.top, b: r.bottom - base.top, l: r.left - base.left, r: r.right - base.left, m: r.top - base.top + r.height / 2 }; }
+        function path(d, cls) { var e = document.createElementNS(NS, "path"); e.setAttribute("d", d); e.setAttribute("class", cls); svg.appendChild(e); }
+        P.forEach(function (c) {
+          var cp = pos(c.id); if (!cp) return;
+          parentsOf(c).forEach(function (pid) {
+            var pp = pos(pid); if (!pp) return;
+            var midY = (pp.b + cp.t) / 2, par = byId(pid);
+            path("M" + pp.x + " " + pp.b + " V" + midY + " H" + cp.x + " V" + cp.t,
+              "ln" + (par && par.step ? " step" : "") + (bold[c.id + "|" + pid] ? " bold" : ""));
+          });
+          arr(c, "partners").forEach(function (pid) {
+            var pp = pos(pid); if (!pp || c.id > pid && byId(pid) && arr(byId(pid), "partners").indexOf(c.id) >= 0) return;
+            if (Math.abs(pp.m - cp.m) > 5) return;
+            var a = cp.r < pp.l ? cp : pp, b = cp.r < pp.l ? pp : cp;
+            path("M" + a.r + " " + a.m + " H" + b.l, "ln partner" + (bold[c.id + "|" + pid] ? " bold" : ""));
+          });
+        });
+        stage.insertBefore(svg, stage.firstChild);
+      }
+
+      // Добавить родственника к человеку x.
+      function addKind(kind, x) {
+        var id = newId(), p = { id: id, rel: relFor(kind, x), name: "", parents: [], partners: [] };
+        if (kind === "mother" || kind === "father" || kind === "stepmother" || kind === "stepfather") {
+          if (x.same) { x.parents = parentsOf(x).slice(); x.sib = x.same; delete x.same; }
+          if (kind.indexOf("step") === 0) p.step = true;
+          arr(x, "parents").push(id);
+        } else if (kind === "brother" || kind === "sister") {
+          p.same = x.same || x.id;
+        } else if (kind === "halfbrother" || kind === "halfsister") {
+          p.sib = x.same || x.id;
+        } else if (kind === "partner") {
+          p.partners.push(x.id); arr(x, "partners").push(id);
+        } else {
+          p.parents.push(x.id); if (arr(x, "partners").length === 1) p.parents.push(x.partners[0]);
+        }
+        P.push(p); sel = id; changed(); draw(); showPanel();
+        setTimeout(function () { var n = panel.querySelector("input[data-k=name]"); if (n) n.focus(); }, 50);
+      }
+
+      function remove(p) {
+        if (!confirm("Удалить «" + (p.rel || "") + (p.name ? " " + p.name : "") + "» из древа?" + (p.anketa ? " Его анкета останется в кабинете." : ""))) return;
+        P.forEach(function (o) {
+          if (o.same === p.id) { o.parents = parentsOf(p).slice(); delete o.same; }
+          if (o.sib === p.id) delete o.sib;
+          o.parents = arr(o, "parents").filter(function (x) { return x !== p.id; });
+          o.partners = arr(o, "partners").filter(function (x) { return x !== p.id; });
+        });
+        P.splice(P.indexOf(p), 1); sel = null; changed(); draw(); showPanel();
+      }
+
+      function showPanel() {
+        while (panel.firstChild) panel.removeChild(panel.firstChild);
+        var p = sel && byId(sel);
+        if (!p) { panel.appendChild(el("div", { class: "ak-hint", text: ro ? "Нажмите на человека, чтобы посмотреть." : "Нажмите на человека, чтобы заполнить или добавить к нему родственника. Начните с себя: «+ мать», «+ отец»…" })); return; }
+        var head = el("div", { class: "ak-row" }, [el("b", { text: p.id === "me" ? cardText(p).name || "Вы" : (p.rel || "Родственник") + (p.name ? " – " + p.name : "") }),
+          el("button", { class: "ak-link", style: "font-size:14px", text: "Закрыть", onclick: function () { sel = null; draw(); showPanel(); } })]);
+        panel.appendChild(head);
+        if (p.id !== "me") {
+          var grid = el("div", { class: "ak-form ak-tree-fields" });
+          [["rel", "Кем приходится", "text", REL_SUGGEST], ["name", "Имя (и фамилия)", "text"], ["birth", "Дата рождения", "text"], ["time", "Время рождения", "time"],
+           ["place", "Место рождения", "text"], ["death", "Дата смерти", "text"]].forEach(function (d) {
+            var w = el("div", {}), inp = input({ id: "tree-" + d[0], type: d[2], suggest: d[3] }, p[d[0]], function (v) { p[d[0]] = v; changed(); draw(); });
+            inp.setAttribute("data-k", d[0]);
+            if (d[0] === "birth" || d[0] === "death") inp.setAttribute("placeholder", "16.02.1966 или «май 1939»");
+            w.appendChild(el("label", { text: d[1] })); w.appendChild(inp); grid.appendChild(w);
+          });
+          var lw = el("div", { class: "wide" });
+          lw.appendChild(el("label", { text: "Обстоятельства жизни" }));
+          lw.appendChild(el("div", { class: "ak-hint", text: "Как жил(а): детство, учёба, работа, чего хотел(а) и о чём мечтал(а), как женился / вышла замуж, переезды, болезни, характер – что знаете." }));
+          lw.appendChild(input({ id: "tree-life", type: "textarea" }, p.life, function (v) { p.life = v; changed(); }));
+          grid.appendChild(lw);
+          panel.appendChild(grid);
+          // Брат / сестра: какие родители общие (сводные – не все).
+          var ref = p.same ? byId(p.same) : p.sib ? byId(p.sib) : null;
+          if (ref && parentsOf(ref).length) {
+            var pr = el("div", { class: "ak-hint" }, ["Общие родители с «" + cardText(ref).rel.toLowerCase() + (ref.name ? " " + ref.name : "") + "»: "]);
+            parentsOf(ref).forEach(function (pid) {
+              var par = byId(pid); if (!par) return;
+              var cb = el("input", { type: "checkbox" }); cb.checked = p.same ? true : parentsOf(p).indexOf(pid) >= 0; cb.disabled = ro;
+              cb.onchange = function () {
+                if (p.same) { p.parents = parentsOf(p).slice(); p.sib = p.same; delete p.same; }
+                var a = arr(p, "parents"), i = a.indexOf(pid);
+                if (cb.checked && i < 0) a.push(pid); if (!cb.checked && i >= 0) a.splice(i, 1);
+                changed(); draw();
+              };
+              pr.appendChild(el("label", { class: "ak-check-inline" }, [cb, " " + (par.rel || "") + (par.name ? " " + par.name : "")]));
+            });
+            panel.appendChild(pr);
+          }
+        } else {
+          panel.appendChild(el("div", { class: "ak-hint", text: "Имя, дата и место рождения – в полях анкеты выше. Здесь – добавьте родственников." }));
+        }
+        if (!ro) {
+          panel.appendChild(el("div", { class: "ak-tree-add" }, [el("span", { class: "ak-hint", text: "Добавить: " })].concat(KINDS.map(function (k) {
+            return el("button", { type: "button", class: "ak-chip", text: "+ " + (p.id === "me" && REL_ME[k[0]] ? REL_ME[k[0]].toLowerCase() : k[1]), onclick: function () { addKind(k[0], p); } });
+          }))));
+        }
+        var ops = el("div", { class: "ak-tree-ops" });
+        if (p.id !== "me") {
+          if (p.anketa) ops.appendChild(el("button", { class: "ak-btn ghost", text: "Открыть анкету", onclick: function () { flush().then(function () { openItem(p.anketa); }); } }));
+          else if (!ro) ops.appendChild(el("button", { class: "ak-btn ghost", text: "Завести анкету на этого человека", onclick: function () {
+            var b = this; b.disabled = true;
+            flush().then(function () { return api("/relative", { from: it.id, person: p.id, label: [p.rel, p.name].filter(Boolean).join(": ") || "Родственник" }); })
+              .then(function (r) { p.anketa = r.id; changed(); return flush().then(function () { openItem(r.id); }); })
+              .catch(function (e) { b.disabled = false; alert(e.message); });
+          } }));
+          if (admin) {
+            var cb = el("input", { type: "checkbox" }); cb.checked = isMark(p.id);
+            cb.onchange = function () {
+              api("/mark", { anketa: it.id, person: p.id, loyal: cb.checked }).then(function (r) { it.marks = r.marks; draw(); })
+                .catch(function (e) { cb.checked = !cb.checked; alert(e.message); });
+            };
+            ops.appendChild(el("label", { class: "ak-loyal" }, [cb, " ★ Лояльность – сильно влияет на натива (видит только Никита)"]));
+          }
+          if (!ro) ops.appendChild(el("button", { class: "ak-link", style: "font-size:14px", text: "Удалить из древа", onclick: function () { remove(p); } }));
+        }
+        panel.appendChild(ops);
+      }
+
+      draw(); showPanel();
+      window.addEventListener("resize", function () { if (document.body.contains(stage)) draw(); });
+      return box;
+    }
+
     function renderForm() {
       var it = state.item; clear();
       root.appendChild(el("button", { class: "ak-link", text: "← Все анкеты", onclick: function () { flush().then(showCabinet); } }));
       root.appendChild(el("h1", { text: it.label }));
       root.appendChild(el("p", { class: "ak-muted", text: it.cabinet.product + (it.cabinet.deadline ? " · заполнить до " + it.cabinet.deadline.text : "") }));
       if (it.status === "sent") root.appendChild(el("p", { class: "ak-ok", text: "Анкета отправлена " + when(it.submitted_at) + ". Можно поправить и отправить ещё раз." }));
+      if (it.person) root.appendChild(el("div", { class: "ak-from", text: "Из древа: " + [it.person.rel, it.person.name].filter(Boolean).join(" – ") +
+        [it.person.birth ? ", р. " + it.person.birth : "", it.person.time ? " " + it.person.time : "", it.person.place ? ", " + it.person.place : "", it.person.death ? ", † " + it.person.death : ""].join("") }));
       if (state.restored) { root.appendChild(el("p", { class: "ak-ok", text: "Восстановил несохранённые правки из этого браузера." })); state.restored = false; setTimeout(flush, 300); }
       var form = el("div", { class: "ak-form" });
       state.showIf = [];
@@ -605,6 +891,7 @@
           form.appendChild(el("div", { class: "ak-section wide", text: f.label }));
           if (f.hint) form.appendChild(el("div", { class: "ak-hint wide", text: f.hint }));
         } else if (f.type === "rows") form.appendChild(rowsField(f));
+        else if (f.type === "tree") form.appendChild(treeField(f));
         else form.appendChild(field(f, state.data, f.id));
       });
       root.appendChild(form);
