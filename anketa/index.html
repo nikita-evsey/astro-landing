@@ -292,6 +292,15 @@
     .ak-form label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 3px; line-height: 1.3; }
     .ak-form .req::after { content: " *"; color: var(--accent); }
     .ak-form input, .ak-form select, .ak-form textarea, .ak-admin textarea { width: 100%; font: inherit; font-size: 15px; line-height: 1.35; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 6px; background: #fff; color: var(--ink); }
+    .ak-form input:not([type=checkbox]), .ak-form select { height: 34px; }
+    /* Поля в строке – вровень: подпись / поле / подсказка – общие ряды сетки (subgrid), длинная подпись не сдвигает поле. */
+    .ak-form > .fld { display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: 3px; }
+    .ak-form > .fld > label { align-self: end; margin: 0; }
+    #ak [hidden] { display: none !important; }
+    .ak-form input[type=checkbox] { width: auto; height: auto; margin: 0; }
+    .ak-group { grid-column: 1 / -1; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px 10px; background: #fff8; }
+    .ak-group-t { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+    .ak-group > .ak-form { gap: 8px 14px; }
     .ak-form textarea, .ak-admin textarea { min-height: 64px; resize: vertical; overflow: hidden; }
     .ak-hint { font-size: 12px; color: var(--muted); margin: 1px 0 3px; line-height: 1.35; }
     .ak-section { font-family: "Prata", Georgia, serif; font-size: 17px; margin: 16px 0 0; padding-bottom: 3px; border-bottom: 1px solid var(--rule); }
@@ -333,6 +342,7 @@
     .ak-person .r { font-size: 11px; color: var(--muted); line-height: 1.2; }
     .ak-person .n { font-size: 13px; font-weight: 600; line-height: 1.25; }
     .ak-person .d { font-size: 11px; color: var(--ink); line-height: 1.2; }
+    .ak-person .pl { font-size: 10.5px; color: var(--muted); line-height: 1.2; margin-bottom: 1px; }
     .ak-person .a { position: absolute; right: 5px; top: 4px; font-size: 10px; color: var(--accent); }
     .ak-person.me { background: #f3ece1; border-color: var(--ink); }
     .ak-person.dead { background: #f1f0ee; }
@@ -346,7 +356,10 @@
     .ak-chip:hover { border-color: var(--accent); }
     .ak-tree-ops { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-top: 10px; }
     .ak-tree-ops .ak-btn { font-size: 14px; padding: 6px 12px; }
-    .ak-loyal { font-size: 14px; font-weight: 600; color: var(--accent); }
+    .ak-loyal { font-size: 14px; font-weight: 600; color: var(--accent); display: inline-flex; gap: 6px; align-items: center; margin: 0 !important; }
+    .ak-link-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; font-size: 13px; }
+    .ak-link-row select { width: auto !important; height: 30px !important; font-size: 13px !important; padding: 2px 6px !important; }
+    .ak-link-row .ak-btn { font-size: 13px; padding: 4px 10px; }
     .ak-check-inline { display: inline-flex !important; gap: 4px; align-items: center; margin: 0 12px 0 0 !important; font-weight: 400 !important; font-size: 13px !important; }
     .ak-from { font-size: 14px; background: var(--box); border-radius: 8px; padding: 8px 12px; margin: 6px 0 10px; }
     @media (max-width: 640px) { .ak-person { width: 124px; } .ak-tree-row { gap: 8px; } }
@@ -521,7 +534,7 @@
     }
 
     function field(f, holder, key) {
-      var wrap = el("div", { class: f.type === "textarea" ? "wide" : "" });
+      var wrap = el("div", { class: f.type === "textarea" ? "wide" : "fld" });
       wrap.appendChild(el("label", { class: f.required ? "req" : "", text: f.label }));
       var hint = f.hint ? el("div", { class: "ak-hint", text: f.hint }) : null;
       if (f.type === "textarea" && hint) { wrap.appendChild(hint); hint = null; }
@@ -706,8 +719,8 @@
       wrap.appendChild(stage); box.appendChild(wrap); box.appendChild(panel);
 
       function cardText(p) {
-        if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: state.data.name || it.label, dates: state.data.birth_date ? "р. " + state.data.birth_date.split("-").reverse().join(".") : "" };
-        return { rel: p.rel || "Кто?", name: p.name || "", dates: [p.birth ? "р. " + p.birth : "", p.death ? "† " + p.death : ""].filter(Boolean).join(" · ") };
+        if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: state.data.name || it.label, born: state.data.birth_date ? "р. " + state.data.birth_date.split("-").reverse().join(".") : "", bplace: state.data.birth_place || "" };
+        return { rel: p.rel || "Кто?", name: p.name || "", born: p.birth ? "р. " + p.birth : "", bplace: p.place || "", died: p.death ? "† " + p.death : "", dplace: p.death_place || "" };
       }
 
       function draw() {
@@ -738,7 +751,10 @@
           onclick: function () { sel = sel === p.id ? null : p.id; draw(); showPanel(); } }, [
           el("span", { class: "r", text: (isMark(p.id) ? "★ " : "") + t.rel }),
           el("span", { class: "n", text: t.name || "Имя?" }),
-          t.dates ? el("span", { class: "d", text: t.dates }) : null,
+          t.born ? el("span", { class: "d", text: t.born }) : null,
+          t.bplace ? el("span", { class: "pl", text: t.bplace }) : null,
+          t.died ? el("span", { class: "d", text: t.died }) : null,
+          t.dplace ? el("span", { class: "pl", text: t.dplace }) : null,
           p.anketa ? el("span", { class: "a", text: "анкета" }) : null,
         ]);
         cards[p.id] = c;
@@ -768,6 +784,21 @@
           });
         });
         stage.insertBefore(svg, stage.firstChild);
+      }
+
+      // Связать уже существующего p с человеком x: p – это <kind> для x.
+      function linkAs(kind, p, x) {
+        if (!x || x === p) return;
+        if (kind === "mother" || kind === "father" || kind === "stepmother" || kind === "stepfather") {
+          if (x.same) { x.parents = parentsOf(x).slice(); x.sib = x.same; delete x.same; }
+          if (arr(x, "parents").indexOf(p.id) < 0) x.parents.push(p.id);
+          if (kind.indexOf("step") === 0) p.step = true; else delete p.step;
+        } else if (kind === "brother" || kind === "sister") { delete p.sib; p.same = x.same || x.id; }
+        else if (kind === "halfbrother" || kind === "halfsister") { delete p.same; p.sib = x.same || x.id; }
+        else if (kind === "partner") { if (arr(p, "partners").indexOf(x.id) < 0) p.partners.push(x.id); if (arr(x, "partners").indexOf(p.id) < 0) x.partners.push(p.id); }
+        else if (arr(p, "parents").indexOf(x.id) < 0) p.parents.push(x.id);
+        if (!String(p.rel || "").trim()) p.rel = relFor(kind, x);
+        changed(); draw(); showPanel();
       }
 
       // Добавить родственника к человеку x.
@@ -811,8 +842,8 @@
         if (p.id !== "me") {
           var grid = el("div", { class: "ak-form ak-tree-fields" });
           [["rel", "Кем приходится", "text", REL_SUGGEST], ["name", "Имя (и фамилия)", "text"], ["birth", "Дата рождения", "text"], ["time", "Время рождения", "time"],
-           ["place", "Место рождения", "text"], ["death", "Дата смерти", "text"]].forEach(function (d) {
-            var w = el("div", {}), inp = input({ id: "tree-" + d[0], type: d[2], suggest: d[3] }, p[d[0]], function (v) { p[d[0]] = v; changed(); draw(); });
+           ["place", "Место рождения", "text"], ["death", "Дата смерти", "text"], ["death_place", "Место смерти", "text"]].forEach(function (d) {
+            var w = el("div", { class: "fld" }), inp = input({ id: "tree-" + d[0], type: d[2], suggest: d[3] }, p[d[0]], function (v) { p[d[0]] = v; changed(); draw(); });
             inp.setAttribute("data-k", d[0]);
             if (d[0] === "birth" || d[0] === "death") inp.setAttribute("placeholder", "16.02.1966 или «май 1939»");
             w.appendChild(el("label", { text: d[1] })); w.appendChild(inp); grid.appendChild(w);
@@ -847,6 +878,14 @@
           panel.appendChild(el("div", { class: "ak-tree-add" }, [el("span", { class: "ak-hint", text: "Добавить: " })].concat(KINDS.map(function (k) {
             return el("button", { type: "button", class: "ak-chip", text: "+ " + (p.id === "me" && REL_ME[k[0]] ? REL_ME[k[0]].toLowerCase() : k[1]), onclick: function () { addKind(k[0], p); } });
           }))));
+        }
+        // Связь с древом: «этот человек – мать / брат / … для <кого>».
+        if (!ro && p.id !== "me") {
+          var kSel = el("select", {}, KINDS.map(function (k) { return el("option", { value: k[0], text: k[1] }); }));
+          var others = P.filter(function (o) { return o.id !== p.id; });
+          var xSel = el("select", {}, others.map(function (o) { var t = cardText(o); return el("option", { value: o.id, text: (t.rel + (t.name ? " " + t.name : "")).slice(0, 40) }); }));
+          panel.appendChild(el("div", { class: "ak-link-row" }, [el("span", { class: "ak-hint", text: "Связать: это" }), kSel, el("span", { class: "ak-hint", text: "для" }), xSel,
+            el("button", { type: "button", class: "ak-btn ghost", text: "Связать", onclick: function () { linkAs(kSel.value, p, byId(xSel.value)); } })]));
         }
         var ops = el("div", { class: "ak-tree-ops" });
         if (p.id !== "me") {
@@ -884,7 +923,7 @@
       if (it.person) root.appendChild(el("div", { class: "ak-from", text: "Из древа: " + [it.person.rel, it.person.name].filter(Boolean).join(" – ") +
         [it.person.birth ? ", р. " + it.person.birth : "", it.person.time ? " " + it.person.time : "", it.person.place ? ", " + it.person.place : "", it.person.death ? ", † " + it.person.death : ""].join("") }));
       if (state.restored) { root.appendChild(el("p", { class: "ak-ok", text: "Восстановил несохранённые правки из этого браузера." })); state.restored = false; setTimeout(flush, 300); }
-      var form = el("div", { class: "ak-form" });
+      var form = el("div", { class: "ak-form" }), groups = {};
       state.showIf = [];
       it.fields.forEach(function (f) {
         if (f.type === "section") {
@@ -892,7 +931,16 @@
           if (f.hint) form.appendChild(el("div", { class: "ak-hint wide", text: f.hint }));
         } else if (f.type === "rows") form.appendChild(rowsField(f));
         else if (f.type === "tree") form.appendChild(treeField(f));
-        else if (["text", "textarea", "select", "date", "time"].indexOf(f.type) >= 0) form.appendChild(field(f, state.data, f.id));
+        else if (["text", "textarea", "select", "date", "time"].indexOf(f.type) >= 0) {
+          if (f.group) {
+            if (!groups[f.group]) {
+              var g = el("div", { class: "ak-form" });
+              form.appendChild(el("div", { class: "ak-group" }, [el("div", { class: "ak-group-t", text: f.group }), g]));
+              groups[f.group] = g;
+            }
+            groups[f.group].appendChild(field(f, state.data, f.id));
+          } else form.appendChild(field(f, state.data, f.id));
+        }
         // Поле нового типа, а страница старая (кэш браузера): не показываем и не трогаем данные – просим обновить.
         else form.appendChild(el("p", { class: "ak-err wide", text: "«" + f.label + "»: обновите страницу, чтобы заполнить это поле." }));
       });
