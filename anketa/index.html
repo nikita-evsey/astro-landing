@@ -375,6 +375,14 @@
     .ak-form > .fld.d3cell { grid-column: span 2; }
     @media (max-width: 640px) { .ak-form > .fld.d3cell { grid-column: auto; } }
     .ak-person.pale { border-style: dashed; }
+    .ak-tree-row.placed { justify-content: flex-start; gap: 0; padding-left: 8px; padding-right: 8px; }
+    .ak-person.ext { background: #faf9f6; border-style: dotted; }
+    .ak-person.ext > * { opacity: .6; }
+    .ak-tree-svg .ln.ext { opacity: .35; }
+    .ak-tree-svg .ln.stub { stroke-dasharray: 3 3; opacity: .55; pointer-events: stroke; cursor: help; }
+    .ak-tree-svg .stubdot { fill: var(--muted); opacity: .6; }
+    .ak-tree-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 6px; }
+    .ak-tree-mode .ak-chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
     .ak-person.pale > * { opacity: .45; }
     .ak-tree-svg .ln.union { stroke: #7d7466; stroke-width: 1.3; }
     .ak-tree-svg .ln.union.former { stroke-dasharray: 5 4; }
@@ -921,64 +929,104 @@
       // Поколения и порядок в ряду: обход от «me» по всем связям.
       // dir – в какую сторону от человека ставить его супругов: наружу от того, через кого пришли (мамины – влево, папины – вправо).
       // Текущий брак – ближе, бывшие – дальше; дети и сводные – под серединой своей пары родителей.
+      // ---------- основное и расширенное древо (решение Никиты 2026-11-11) ----------
+      // Основное – то, что важнее всего для астрологии: натив, его дети и внуки, братья и сёстры (и сводные), родители и все предки,
+      // супруг(а) и те, от кого дети. Расширенное – ещё тёти и дяди, отчимы и мачехи, бывшие супруги и их семьи (бледнее, с краю).
+      var mode = "core";
+      try { mode = localStorage.getItem("ak-tree-mode") || "core"; } catch (e) {}
+      function setMode(m) { mode = m; try { localStorage.setItem("ak-tree-mode", m); } catch (e) {} draw(); }
+      function bloodParents(id) { return parentsOf(byId(id)).filter(function (pid) { var o = byId(pid); return o && !o.step; }); }
+      function coreSet() {
+        var c = { me: true }, sib = {}, q = ["me"], me = byId("me") || {};
+        while (q.length) { var a = q.shift(); bloodParents(a).forEach(function (p) { if (!c[p]) { c[p] = true; q.push(p); } }); }
+        var seen = { me: 1 }; q = ["me"];
+        while (q.length) { var d = q.shift(); childrenOf(d).forEach(function (k) { if (!seen[k.id]) { seen[k.id] = 1; c[k.id] = true; q.push(k.id); } }); }
+        var mp = bloodParents("me");
+        P.forEach(function (p) {
+          if (p.id === "me" || c[p.id]) return;
+          if (p.same === "me" || p.sib === "me" || me.same === p.id || me.sib === p.id || bloodParents(p.id).some(function (x) { return mp.indexOf(x) >= 0; })) { c[p.id] = true; sib[p.id] = true; }
+        });
+        unionsOf("me").forEach(function (u) { if (!former(u) || kidsOf(u).length) c[other(u, "me")] = true; });
+        return { core: c, sib: sib };
+      }
+      function linked(p) { return parentsOf(p).length || childrenOf(p.id).length || unionsOf(p.id).length || p.same || p.sib || P.some(function (o) { return o.same === p.id || o.sib === p.id; }); }
+
+      // Координаты: x – в «местах» (1 = одна карточка с промежутком), ряды – по поколениям.
       function layout() {
-        var gen = {}, x = {}, dir = {}, q = ["me"], later = [], dep = {}; gen.me = 0; x.me = 0; dir.me = 1;
-        // Сколько поколений предков над человеком (без отчимов и мачех).
-        function depth(id, guard) {
-          if (dep[id] != null) return dep[id];
-          if ((guard || 0) > 12) return 0;
-          dep[id] = 0;
-          var ps = parentsOf(byId(id)).filter(function (pid) { var o = byId(pid); return o && !o.step; });
-          dep[id] = ps.length ? 1 + Math.max.apply(null, ps.map(function (pid) { return depth(pid, (guard || 0) + 1); })) : 0;
-          return dep[id];
+        var CS = coreSet(), core = CS.core, show = {}, gen = {}, x = {};
+        if (sel && mode === "core" && !core[sel] && byId(sel) && linked(byId(sel))) mode = "ext";   // открыли второстепенного – показываем всё
+        P.forEach(function (p) { if (mode === "ext" || core[p.id]) show[p.id] = true; });
+        var side = function (p) { var s = sexOf(byId(p)); return s === "f" ? 0 : s === "m" ? 2 : 1; };
+        var order = function (ps) { return ps.slice().sort(function (a, b) { return side(a) - side(b); }); };   // мама слева, папа справа
+        // Предки: у каждого своя полоса по ширине его ветви; пара родителей – рядом, на внутренних краях своих полос.
+        var pw = {};
+        function bp(id) { return bloodParents(id).filter(function (p) { return core[p]; }); }
+        function W(id, d) { if (pw[id] != null) return pw[id]; pw[id] = 1; if ((d || 0) > 12) return 1; var s2 = 0; bp(id).forEach(function (p) { s2 += W(p, (d || 0) + 1); }); return (pw[id] = Math.max(1, s2)); }
+        function up(id, cx, g) {
+          var ps = order(bp(id)).filter(function (p) { return gen[p] == null; }); if (!ps.length) return;
+          // Пара – ровно над ребёнком; ветвь мамы уходит влево, ветвь папы – вправо (сколько бы предков ни было у каждой).
+          if (ps.length === 2) {
+            gen[ps[0]] = gen[ps[1]] = g + 1; x[ps[0]] = cx - 0.5; x[ps[1]] = cx + 0.5;
+            up(ps[0], cx - W(ps[0]) / 2, g + 1); up(ps[1], cx + W(ps[1]) / 2, g + 1);
+            return;
+          }
+          var left = cx - ps.reduce(function (s2, p) { return s2 + W(p); }, 0) / 2;
+          ps.forEach(function (p) { var w = W(p), segC = left + w / 2; gen[p] = g + 1; x[p] = segC; up(p, segC, g + 1); left += w; });
         }
-        // Место в ряду занято – сдвигаем дальше в свою сторону (иначе карточки и линии браков наезжают).
-        function visit(id, g, px, d) {
-          if (gen[id] != null || !byId(id)) return;
-          var step = d || 1, guard = 0;
-          while (guard++ < 60 && Object.keys(gen).some(function (k) { return gen[k] === g && Math.abs(x[k] - px) < 0.9; })) px += step * 1.05;
-          gen[id] = g; x[id] = px; dir[id] = d || 1; q.push(id);
+        gen.me = 0; x.me = 0; up("me", 0, 0);
+        // Ряд натива: рядом – супруги (текущие слева, бывшие справа), дальше – братья и сёстры (папины сводные – справа).
+        var Lx = -1, Rx = 1, mp = order(bloodParents("me")), dad = mp.length > 1 ? mp[mp.length - 1] : null, mom = mp.length > 1 ? mp[0] : mp[0];
+        var us = unionsOf("me").filter(function (u) { return show[other(u, "me")]; });
+        us.filter(function (u) { return !former(u); }).forEach(function (u) { var o = other(u, "me"); if (gen[o] == null) { gen[o] = 0; x[o] = Lx--; } });
+        us.filter(former).forEach(function (u) { var o = other(u, "me"); if (gen[o] == null) { gen[o] = 0; x[o] = Rx++; } });
+        P.filter(function (p) { return CS.sib[p.id] && gen[p.id] == null; }).forEach(function (p) {
+          var ps = bloodParents(p.id), right = dad && ps.indexOf(dad) >= 0 && !(mom && ps.indexOf(mom) >= 0);
+          gen[p.id] = 0; x[p.id] = right ? Rx++ : Lx--;
+        });
+        // Потомки: под своей парой родителей, у каждого полоса по ширине его потомства.
+        function kidsOf2(id) { return childrenOf(id).filter(function (k) { return core[k.id] && gen[k.id] == null; }); }
+        function DW(id, d) { var ks = kidsOf2(id); if (!ks.length || (d || 0) > 10) return 1; return Math.max(1, ks.reduce(function (s2, k) { return s2 + DW(k.id, (d || 0) + 1); }, 0)); }
+        function down(id) {
+          var ks = kidsOf2(id); if (!ks.length) return;
+          var anc = function (k) { var co = parentsOf(k).filter(function (q2) { return q2 !== id && gen[q2] === gen[id]; })[0]; return co != null ? (x[id] + x[co]) / 2 : x[id]; };
+          ks.sort(function (a, b) { return anc(a) - anc(b) || ((a.birth || {}).y || 0) - ((b.birth || {}).y || 0); });
+          var ws = ks.map(function (k) { return DW(k.id); }), tot = ws.reduce(function (s2, w) { return s2 + w; }, 0);
+          var c = ks.reduce(function (s2, k) { return s2 + anc(k); }, 0) / ks.length, left = c - tot / 2;
+          ks.forEach(function (k, i) { gen[k.id] = gen[id] - 1; x[k.id] = left + ws[i] / 2; left += ws[i]; });
+          ks.forEach(function (k) { down(k.id); });
         }
-        while (q.length || later.length) {
-          if (!q.length) { var lt = later.shift(); visit(lt[0], lt[1], lt[2], lt[3]); continue; }
-          var id = q.shift(), p = byId(id), g = gen[id], px = x[id], d = dir[id];
-          // Отчим / мачеха – не третьим родителем, а рядом со своим супругом (через брак); если брака нет – с краю, позже.
-          var ps = parentsOf(p).filter(function (pid) { var o = byId(pid); return !(o && o.step); });
-          // Пара родителей тем шире, чем больше поколений предков над ней: у каждой ветви – своя половина места.
-          var spread = 1.1 * Math.pow(2, Math.max(0, depth(id) - 1));
-          ps.forEach(function (pid, i) { var off = (i - (ps.length - 1) / 2) * spread; visit(pid, g + 1, px + off, off < 0 ? -1 : off > 0 ? 1 : d); });
-          parentsOf(p).forEach(function (pid) { var o = byId(pid); if (o && o.step) later.push([pid, g + 1, px + d * 3.3, d]); });
-          // Ближе – текущий брак, дальше – бывшие; дальше всех – бывший, у которого своя другая семья (чтобы его новый супруг встал рядом с ним).
-          var rank = function (u) { var o = other(u, id); return (former(u) ? 1 : 0) + (unionsOf(o).length > 1 ? 2 : 0); };
-          var us = unionsOf(id).slice().sort(function (a, b) { return rank(a) - rank(b); });
-          if (id === "me") {
-            // У натива: текущие супруги – слева, бывшие – справа, вплотную к нему.
-            var li = 0, ri = 0;
-            us.forEach(function (u) { if (former(u)) visit(other(u, id), g, px + 1.05 * ++ri, 1); else visit(other(u, id), g, px - 1.05 * ++li, -1); });
-          } else us.forEach(function (u, i) { visit(other(u, id), g, px + d * (1.05 + i * 1.05), d); });
-          var kids = childrenOf(id);
-          // Братья и сёстры натива – не как «дети родителя», а по краям ряда натива (ставятся после супругов, см. ниже).
-          kids.forEach(function (c, i) { if (c.same === "me" || c.sib === "me") return; visit(c.id, g - 1, px + (i - (kids.length - 1) / 2) * 1.1, d); });
-          var sibs = P.filter(function (c) { return c.same === id || c.sib === id || (p.same && c.id === p.same) || (p.sib && c.id === p.sib); });
-          if (id === "me") {
-            // Братья и сёстры натива – за супругами, по краям: папины сводные справа, остальные слева (ставятся после всех супругов).
-            var papa = parentsOf(p).filter(function (pid) { var o = byId(pid); return o && !o.step; })[1];
-            sibs.forEach(function (c) { var right = papa && c.sib && arr(c, "parents").indexOf(papa) >= 0; later.push([c.id, g, px + (right ? 1.05 : -1.05), right ? 1 : -1]); });
-          } else sibs.forEach(function (c, i) { visit(c.id, g, px - d * (1.05 + i * 1.05), -d); });
+        down("me");
+        // Расширенное: остальные – рядом с тем, с кем связаны, наружу от середины (основных не двигаем).
+        function put(id, g, px, d) {
+          var guard = 0;
+          while (guard++ < 80 && Object.keys(gen).some(function (k) { return gen[k] === g && Math.abs(x[k] - px) < 0.99; })) px += d;
+          gen[id] = g; x[id] = px;
         }
-        // Потомки – под серединой своих родителей (если родители в ряду выше).
-        var minG = 0; Object.keys(gen).forEach(function (k) { if (gen[k] < minG) minG = gen[k]; });
-        for (var g = -1; g >= minG; g--) {   // ряд натива не трогаем: там порядок – супруги, потом братья и сёстры по краям
-          P.forEach(function (c) {
-            if (gen[c.id] !== g) return;
-            var ps = parentsOf(c).filter(function (id) { return gen[id] === g + 1; });
-            if (ps.length) x[c.id] = ps.reduce(function (s2, id) { return s2 + x[id]; }, 0) / ps.length + (x[c.id] % 1) * 0.01;
+        var out = function (v) { return v < 0 ? -1 : 1; };
+        for (var pass = 0, moved = true; moved && pass < 60; pass++) {
+          moved = false;
+          P.forEach(function (p) {
+            if (!show[p.id] || gen[p.id] != null) return;
+            var spot = null;
+            unionsOf(p.id).some(function (u) { var o = other(u, p.id); if (gen[o] == null) return false; spot = [gen[o], x[o] + out(x[o]), out(x[o])]; return true; });
+            if (!spot) { var ref = [p.same, p.sib].filter(function (r) { return r && gen[r] != null; })[0]; if (ref) spot = [gen[ref], x[ref] + out(x[ref]), out(x[ref])]; }
+            if (!spot) { var ps = parentsOf(p).filter(function (q2) { return gen[q2] != null; }); if (ps.length) { var mx = ps.reduce(function (s2, q2) { return s2 + x[q2]; }, 0) / ps.length; spot = [gen[ps[0]] - 1, mx, out(mx)]; } }
+            if (!spot) { var kc = childrenOf(p.id).filter(function (k) { return gen[k.id] != null; })[0]; if (kc) spot = [gen[kc.id] + 1, x[kc.id], out(x[kc.id])]; }
+            if (spot) { put(p.id, spot[0], spot[1], spot[2]); moved = true; }
           });
         }
-        var rows = {}, loose = [];
-        P.forEach(function (p) { if (gen[p.id] == null) loose.push(p); else (rows[gen[p.id]] = rows[gen[p.id]] || []).push(p); });
-        Object.keys(rows).forEach(function (g) { rows[g].sort(function (a, b) { return x[a.id] - x[b.id]; }); });
-        return { rows: rows, loose: loose };
+        // В ряду – не ближе одного места друг к другу.
+        var rows = {}, loose = [], minX = 0;
+        P.forEach(function (p) {
+          if (gen[p.id] == null) { if (show[p.id] || !linked(p)) loose.push(p); return; }
+          (rows[gen[p.id]] = rows[gen[p.id]] || []).push(p);
+        });
+        Object.keys(rows).forEach(function (g) {
+          rows[g].sort(function (a, b) { return x[a.id] - x[b.id]; });
+          for (var i = 1; i < rows[g].length; i++) if (x[rows[g][i].id] < x[rows[g][i - 1].id] + 1) x[rows[g][i].id] = x[rows[g][i - 1].id] + 1;
+          if (rows[g].length) minX = Math.min(minX, x[rows[g][0].id]);
+        });
+        return { rows: rows, loose: loose, x: x, minX: minX, core: core, hidden: P.filter(function (p) { return !core[p.id] && linked(p); }).length };
       }
 
       // Путь от лояльного человека к «me» – жирные линии.
@@ -998,7 +1046,8 @@
       }
 
       var wrap = el("div", { class: "ak-tree-scroll" }), stage = el("div", { class: "ak-tree-stage" }), panel = el("div", { class: "ak-tree-panel" });
-      wrap.appendChild(stage); box.appendChild(wrap); box.appendChild(panel);
+      var modeBar = el("div", { class: "ak-tree-mode" }), lastCore = {};
+      wrap.appendChild(stage); box.appendChild(modeBar); box.appendChild(wrap); box.appendChild(panel);
 
       function cardText(p) {
         if (p.id === "me") return { rel: "Это " + (it.role === "self" ? "вы" : "он(а)"), name: pname(state.data) || it.label, married: hasMarriage("me") ? state.data.married_name || "" : "",
@@ -1013,11 +1062,23 @@
       function draw() {
         while (stage.firstChild) stage.removeChild(stage.firstChild);
         var L = layout(), cards = {};
+        lastCore = L.core;
+        var narrow = window.innerWidth <= 640, CW = narrow ? 124 : 148, SLOT = CW + (narrow ? 22 : 40);
+        modeBar.textContent = "";
+        modeBar.appendChild(el("button", { type: "button", class: "ak-chip" + (mode === "core" ? " on" : ""), text: "Основное древо", onclick: function () { sel = sel && L.core[sel] ? sel : null; setMode("core"); showPanel(); } }));
+        modeBar.appendChild(el("button", { type: "button", class: "ak-chip" + (mode === "ext" ? " on" : ""), text: "Расширенное" + (L.hidden ? " (+" + L.hidden + ")" : ""), onclick: function () { setMode("ext"); } }));
+        modeBar.appendChild(el("span", { class: "ak-hint", text: mode === "core" ? "Натив, дети и внуки, братья и сёстры, родители и все предки." : "Ещё тёти и дяди, отчимы и мачехи, бывшие супруги и их семьи – бледнее." }));
         var gens = Object.keys(L.rows).map(Number).sort(function (a, b) { return b - a; });
         gens.forEach(function (g) {
           stage.appendChild(el("div", { class: "ak-gen" }, [el("span", { text: GEN_NAME[g] || (g > 0 ? "Предки" : "Потомки") })]));
-          var row = el("div", { class: "ak-tree-row" });
-          L.rows[g].forEach(function (p) { row.appendChild(card(p, cards)); });
+          var row = el("div", { class: "ak-tree-row placed" }), prev = null;
+          // Места – по координатам: родители над детьми, ветви не съезжают к центру.
+          L.rows[g].forEach(function (p) {
+            var c = card(p, cards), gap = prev == null ? (L.x[p.id] - L.minX) * SLOT : (L.x[p.id] - prev) * SLOT - CW;
+            c.style.marginLeft = Math.round(gap) + "px"; prev = L.x[p.id];
+            if (mode === "ext" && !L.core[p.id]) c.classList.add("ext");
+            row.appendChild(c);
+          });
           stage.appendChild(row);
         });
         if (L.loose.length) {
@@ -1067,6 +1128,7 @@
         var NS = "http://www.w3.org/2000/svg", svg = document.createElementNS(NS, "svg");
         svg.setAttribute("width", W); svg.setAttribute("height", H); svg.setAttribute("class", "ak-tree-svg");
         function pos(id) { var c = cards[id]; if (!c) return null; var r = c.getBoundingClientRect(); return { x: r.left - base.left + r.width / 2, t: r.top - base.top, b: r.bottom - base.top, l: r.left - base.left, r: r.right - base.left, m: r.top - base.top + Math.min(r.height / 2, 26) }; }
+        function isExt(id) { return !!(cards[id] && cards[id].classList.contains("ext")); }
         function path(d, cls) { var e = document.createElementNS(NS, "path"); e.setAttribute("d", d); e.setAttribute("class", cls); svg.appendChild(e); }
         function badge(x, y, u) {
           // Значок по виду союза; развод / расстались – тот же значок, перечёркнутый (решение Никиты 2026-11-11).
@@ -1085,7 +1147,7 @@
         var umid = {}, arcs = {};
         U.forEach(function (u) {
           var pa = pos(u.a), pb = pos(u.b); if (!pa || !pb || Math.abs(pa.t - pb.t) > 5) return;
-          var A = pa.x < pb.x ? pa : pb, B = pa.x < pb.x ? pb : pa, y = A.m, cls = "ln union" + (former(u) ? " former" : "") + (bold[u.a + "|" + u.b] ? " bold" : "");
+          var A = pa.x < pb.x ? pa : pb, B = pa.x < pb.x ? pb : pa, y = A.m, cls = "ln union" + (former(u) ? " former" : "") + (bold[u.a + "|" + u.b] ? " bold" : "") + (isExt(u.a) || isExt(u.b) ? " ext" : "");
           var yr = years(u), sym = u.kind === "relationship" ? "♡" : "⚭", lcls = "ul" + (former(u) ? " former" : "");
           // Между супругами есть другие карточки – брак дугой над ними (иначе линия и годы прячутся за чужими карточками).
           var apart = B.l - A.r > 40;
@@ -1152,14 +1214,34 @@
         });
         Object.keys(groups).forEach(function (k) {
           var g = groups[k];
-          if (g.drops && g.drops.length > 1) g.drops.forEach(function (d) { path("M" + d.x + " " + d.y + " V" + g.busY, "ln"); });
-          else path("M" + g.x + " " + g.y + " V" + g.busY, "ln");
-          path("M" + g.lo + " " + g.busY + " H" + g.hi, "ln");
+          var ge = g.kids.every(function (q) { return isExt(q.c.id); }) ? "ln ext" : "ln";
+          if (g.drops && g.drops.length > 1) g.drops.forEach(function (d) { path("M" + d.x + " " + d.y + " V" + g.busY, ge); });
+          else path("M" + g.x + " " + g.y + " V" + g.busY, ge);
+          path("M" + g.lo + " " + g.busY + " H" + g.hi, ge);
           g.kids.forEach(function (q) {
-            path("M" + q.ax + " " + g.busY + " V" + q.cp.t, q.c.adopted ? "ln step" : "ln");   // приёмный – пунктир
+            path("M" + q.ax + " " + g.busY + " V" + q.cp.t, (q.c.adopted ? "ln step" : "ln") + (isExt(q.c.id) ? " ext" : ""));   // приёмный – пунктир; второстепенный – бледнее
             if (q.bold) path("M" + (g.drops && g.drops.length > 1 ? g.drops[0].x + " " + g.drops[0].y : g.x + " " + g.y) + " V" + g.busY + " H" + q.ax + " V" + q.cp.t, "ln bold");
           });
         });
+        // Основное древо: связи со скрытыми людьми – короткие «хвосты» в никуда (решение Никиты 2026-11-11), подсказка – кто скрыт.
+        if (mode === "core") {
+          var meP = pos("me");
+          Object.keys(cards).forEach(function (id) {
+            var p0 = pos(id), hid = function (o) { return o && !cards[o] && byId(o) && linked(byId(o)); };
+            var who = function (ids) { return "Скрыто (расширенное древо): " + ids.map(function (o) { return nm(byId(o)); }).join(", "); };
+            function stub(d, ex, ey, ids) {
+              var e = document.createElementNS(NS, "path"); e.setAttribute("d", d); e.setAttribute("class", "ln stub");
+              var t = document.createElementNS(NS, "title"); t.textContent = who(ids); e.appendChild(t); svg.appendChild(e);
+              var c = document.createElementNS(NS, "circle"); c.setAttribute("cx", ex); c.setAttribute("cy", ey); c.setAttribute("r", 2.5); c.setAttribute("class", "stubdot"); svg.appendChild(c);
+            }
+            var sp = unionsOf(id).map(function (u) { return other(u, id); }).filter(hid);
+            if (sp.length) { var dir = meP && p0.x < meP.x - 1 ? -1 : 1, sx = dir < 0 ? p0.l : p0.r, sy = p0.b - 10; stub("M" + sx + " " + sy + " h" + dir * 16, sx + dir * 18, sy, sp); }
+            var pa = parentsOf(byId(id)).filter(hid);
+            if (pa.length) stub("M" + (p0.x + 24) + " " + p0.t + " v-14", p0.x + 24, p0.t - 16, pa);
+            var ki = childrenOf(id).map(function (k) { return k.id; }).filter(hid);
+            if (ki.length) stub("M" + (p0.x + 24) + " " + p0.b + " v14", p0.x + 24, p0.b + 16, ki);
+          });
+        }
         stage.insertBefore(svg, stage.firstChild);
       }
 
