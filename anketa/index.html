@@ -892,7 +892,9 @@
           if (f.hint) form.appendChild(el("div", { class: "ak-hint wide", text: f.hint }));
         } else if (f.type === "rows") form.appendChild(rowsField(f));
         else if (f.type === "tree") form.appendChild(treeField(f));
-        else form.appendChild(field(f, state.data, f.id));
+        else if (["text", "textarea", "select", "date", "time"].indexOf(f.type) >= 0) form.appendChild(field(f, state.data, f.id));
+        // Поле нового типа, а страница старая (кэш браузера): не показываем и не трогаем данные – просим обновить.
+        else form.appendChild(el("p", { class: "ak-err wide", text: "«" + f.label + "»: обновите страницу, чтобы заполнить это поле." }));
       });
       root.appendChild(form);
       requestAnimationFrame(growAll);
