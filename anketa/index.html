@@ -265,8 +265,6 @@
     .ak-muted { color: var(--muted); font-size: 16px; }
     .ak-card { background: var(--box); border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
     .ak-admin { border: 2px dashed var(--accent); }
-    .ak-login { margin-top: 40px; font-size: 14px; }
-    .ak-login .ak-link { font-size: 14px; opacity: .6; }
     .ak-admin label { display: block; margin-top: 14px; font-weight: 600; }
     .ak-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
     .ak-badge { font-size: 14px; padding: 2px 10px; border-radius: 99px; background: #e4ded2; color: var(--ink); white-space: nowrap; }
@@ -276,19 +274,40 @@
     .ak-btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); }
     .ak-btn[disabled] { opacity: .5; cursor: default; }
     .ak-link { background: none; border: 0; padding: 0; font: inherit; font-size: 16px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); cursor: pointer; }
-    .ak-form label { display: block; font-size: 16px; font-weight: 600; margin: 18px 0 6px; }
+    /* Плотная раскладка (решение Никиты 2026-11-11): максимум информации на экране, события – таблицей. */
+    main:has(#ak) { max-width: 1120px; padding-top: 28px; }
+    #ak h1 { margin: 6px 0 4px; }
+    #ak p { margin: 6px 0; }
+    .ak-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 14px; align-items: start; }
+    .ak-form > .wide { grid-column: 1 / -1; }
+    .ak-form label { display: block; font-size: 13px; font-weight: 600; margin: 0 0 3px; line-height: 1.3; }
     .ak-form .req::after { content: " *"; color: var(--accent); }
-    .ak-form input, .ak-form select, .ak-form textarea { width: 100%; font: inherit; font-size: 17px; padding: 9px 11px; border: 1px solid var(--rule); border-radius: 8px; background: #fff; color: var(--ink); }
-    .ak-form textarea { min-height: 110px; resize: vertical; }
-    .ak-hint { font-size: 14px; color: var(--muted); margin: 2px 0 6px; line-height: 1.45; }
-    .ak-section { font-family: "Prata", Georgia, serif; font-size: 22px; margin: 34px 0 4px; }
-    .ak-rows .ak-item { border: 1px solid var(--rule); border-radius: 8px; padding: 4px 12px 12px; margin: 10px 0; background: #fff8; }
-    .ak-rows .ak-item label { margin-top: 10px; }
-    .ak-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
-    @media (max-width: 520px) { .ak-grid { grid-template-columns: 1fr; } }
-    .ak-ex { font-size: 15px; color: var(--muted); margin: 4px 0 8px; padding-left: 18px; }
+    .ak-form input, .ak-form select, .ak-form textarea, .ak-admin textarea { width: 100%; font: inherit; font-size: 15px; line-height: 1.35; padding: 6px 8px; border: 1px solid var(--rule); border-radius: 6px; background: #fff; color: var(--ink); }
+    .ak-form textarea, .ak-admin textarea { min-height: 64px; resize: vertical; overflow: hidden; }
+    .ak-hint { font-size: 12px; color: var(--muted); margin: 1px 0 3px; line-height: 1.35; }
+    .ak-section { font-family: "Prata", Georgia, serif; font-size: 17px; margin: 16px 0 0; padding-bottom: 3px; border-bottom: 1px solid var(--rule); }
+    /* Строки (события, близкие) – таблица: заголовки один раз, строка = одна линия. */
+    .ak-tbl { display: grid; gap: 4px 6px; align-items: start; }
+    .ak-tbl .th { font-size: 12px; font-weight: 600; color: var(--muted); }
+    .ak-tbl textarea.one { min-height: 0; height: 34px; }
+    .ak-tr { display: contents; }
+    .ak-x { background: none; border: 0; color: var(--muted); font-size: 18px; line-height: 32px; cursor: pointer; padding: 0 4px; }
+    .ak-x:hover { color: var(--accent); }
+    /* Телефон: каждая строка – своя карточка: короткие поля по два в ряд, длинные – на всю ширину. */
+    @media (max-width: 640px) {
+      .ak-tbl { display: block; }
+      .ak-tr.head { display: none; }
+      .ak-tr { display: flex; flex-wrap: wrap; gap: 4px 6px; padding: 8px 0; border-top: 1px solid var(--rule); }
+      .ak-tr:nth-child(2) { border-top: 0; }
+      .ak-tr > div { flex: 1 1 40%; min-width: 0; }
+      .ak-tr > .c-wide { flex-basis: 100%; }
+      .ak-tr > .ak-x { position: absolute; right: 0; top: 8px; }
+      .ak-tr > .ak-x-none { display: none; }
+      .ak-tr { position: relative; padding-right: 26px; }
+    }
+    .ak-ex { font-size: 13px; color: var(--muted); margin: 4px 0 8px; padding-left: 18px; }
     .ak-ex li { margin: 2px 0; }
-    .ak-bar { position: sticky; bottom: 0; background: var(--paper); border-top: 1px solid var(--rule); padding: 12px 0; margin-top: 30px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .ak-bar { position: sticky; bottom: 0; background: var(--paper); border-top: 1px solid var(--rule); padding: 8px 0; margin-top: 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
     .ak-save { font-size: 14px; color: var(--muted); }
     .ak-err { color: var(--accent); font-size: 16px; }
     .ak-ok { background: #dbe8d5; color: #24502a; border-radius: 8px; padding: 10px 14px; font-size: 16px; }
@@ -344,7 +363,7 @@
 
     // ---------- только для Никиты (ссылка с ключом) ----------
     function adminCard(ad) {
-      var box = el("div", { class: "ak-card ak-admin ak-form" });
+      var box = el("div", { class: "ak-card ak-admin" });
       box.appendChild(el("b", { text: "Только для Никиты" }));
       box.appendChild(el("div", { class: "ak-hint", text: "Клиент этот блок не видит. Сохранённое копируется на страницу сделки в Notion." }));
       box.appendChild(el("label", { text: "Вопросы клиента в боте" }));
@@ -366,29 +385,6 @@
       } });
       box.appendChild(el("p", { style: "display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px" }, [btn, msg]));
       if (sessGet() && !akey) box.appendChild(el("button", { class: "ak-link", text: "Выйти (на этом устройстве)", onclick: function () { sessSet(""); showCabinet(); } }));
-      return box;
-    }
-
-    // Admin Login (вход Никиты): Telegram Login Widget (домен сайта привязан к боту в @BotFather -> /setdomain).
-    function loginLink() {
-      var box = el("div", { class: "ak-login" });
-      var a = el("button", { class: "ak-link ak-muted", text: "Admin Login", onclick: function () {
-        box.removeChild(a);
-        var msg = el("div", { class: "ak-hint" });
-        window.onTgAuth = function (user) {
-          msg.textContent = "Проверяю…";
-          api("/login", { tg: user }).then(function (r) { sessSet(r.s); showCabinet(); })
-            .catch(function (e) { msg.textContent = e.message; });
-        };
-        var sc = document.createElement("script");
-        sc.async = true; sc.src = "https://telegram.org/js/telegram-widget.js?22";
-        sc.setAttribute("data-telegram-login", "astrotherapiest_bot");
-        sc.setAttribute("data-size", "medium");
-        sc.setAttribute("data-userpic", "false");
-        sc.setAttribute("data-onauth", "onTgAuth(user)");
-        box.appendChild(sc); box.appendChild(msg);
-      } });
-      box.appendChild(a);
       return box;
     }
 
@@ -426,7 +422,6 @@
         // Никита видит то же, что клиент, и ниже – свой блок.
         root.appendChild(el("p", { class: "ak-muted", text: "Вопросы – в боте @astrotherapiest_bot. Данные анкеты видит только Никита." }));
         if (cab.admin) root.appendChild(adminCard(cab.admin));
-        else root.appendChild(loginLink());
       }).catch(function (e) { fail(e.message); });
     }
 
@@ -444,9 +439,15 @@
       }).catch(function (e) { fail(e.message); });
     }
 
+    function grow(t) { if (!t.offsetParent) return; t.style.height = "auto"; t.style.height = (t.scrollHeight + 2) + "px"; }
+    // Высота полей – по тексту; пересчёт после раскладки, шрифтов и при смене ширины окна.
+    function growAll() { Array.prototype.forEach.call(document.querySelectorAll("#ak textarea"), grow); }
+    window.addEventListener("resize", growAll);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(growAll);
+
     function input(f, value, onchange) {
       var ro = state.cab.locked, node;
-      if (f.type === "textarea") node = el("textarea", {});
+      if (f.type === "textarea") { node = el("textarea", { rows: f.one ? 1 : 3, class: f.one ? "one" : "" }); node.addEventListener("input", function () { grow(node); }); setTimeout(function () { grow(node); }, 0); }
       else if (f.type === "select") {
         node = el("select", {}, [el("option", { value: "", text: "—" })].concat(f.options.map(function (o) { return el("option", { value: o, text: o }); })));
       } else node = el("input", { type: f.type === "date" ? "date" : f.type === "time" ? "time" : "text" });
@@ -464,15 +465,17 @@
     }
 
     function field(f, holder, key) {
-      var wrap = el("div", {});
+      var wrap = el("div", { class: f.type === "textarea" ? "wide" : "" });
       wrap.appendChild(el("label", { class: f.required ? "req" : "", text: f.label }));
-      if (f.hint) wrap.appendChild(el("div", { class: "ak-hint", text: f.hint }));
+      var hint = f.hint ? el("div", { class: "ak-hint", text: f.hint }) : null;
+      if (f.type === "textarea" && hint) { wrap.appendChild(hint); hint = null; }
       if (f.examples && f.examples.length) {
         wrap.appendChild(el("div", { class: "ak-hint", text: "Примеры вопросов:" }));
         wrap.appendChild(el("ul", { class: "ak-ex" }, f.examples.map(function (x) { return el("li", { text: x }); })));
       }
       var node = input(f, holder[key], function (v) { holder[key] = v; changed(); });
       wrap.appendChild(node);
+      if (hint) wrap.appendChild(hint);
       // Быстрый выбор готового ответа (подсказки datalist на телефоне видны не всегда).
       if (f.suggest && f.suggest.length && !state.cab.locked) {
         wrap.appendChild(el("div", { class: "ak-hint" }, f.suggest.map(function (o) {
@@ -487,27 +490,40 @@
       return wrap;
     }
 
+    // Строки (события, близкие) – таблица: заголовки колонок один раз, каждая строка – одна линия, комментарий растёт по тексту.
+    function isWide(sf) { return sf.id === "comment" || sf.id === "place"; }
+    function colOf(sf) {
+      if (isWide(sf)) return "minmax(160px, 1fr)";
+      if (sf.type === "select") return "minmax(150px, 240px)";
+      if (sf.type === "date") return "150px";
+      if (sf.type === "time") return "90px";
+      return "minmax(110px, 170px)";
+    }
     function rowsField(f) {
-      var box = el("div", { class: "ak-rows" });
+      var box = el("div", { class: "ak-rows wide" });
       if (!Array.isArray(state.data[f.id])) state.data[f.id] = [];
       var list = state.data[f.id];
       if (!list.length) list.push({});
+      var ro = state.cab.locked;
       function draw() {
         while (box.firstChild) box.removeChild(box.firstChild);
+        var tbl = el("div", { class: "ak-tbl" });
+        tbl.style.gridTemplateColumns = f.fields.map(colOf).join(" ") + " 24px";
+        tbl.appendChild(el("div", { class: "ak-tr head" }, f.fields.map(function (sf) { return el("div", { class: "th", text: sf.label }); }).concat([el("div", {})])));
         list.forEach(function (row, i) {
-          var item = el("div", { class: "ak-item" });
-          var grid = el("div", { class: "ak-grid" });
+          var tr = el("div", { class: "ak-tr" });
           f.fields.forEach(function (sf) {
-            var w = el("div", {});
-            w.appendChild(el("label", { text: sf.label }));
-            w.appendChild(input(sf, row[sf.id], function (v) { row[sf.id] = v; changed(); }));
-            grid.appendChild(w);
+            var wide = isWide(sf);
+            var node = input(wide ? { id: sf.id, type: "textarea", one: true } : sf, row[sf.id], function (v) { row[sf.id] = v; changed(); });
+            node.setAttribute("aria-label", sf.label);
+            if (sf.type !== "select" && sf.type !== "date" && sf.type !== "time") node.setAttribute("placeholder", sf.label);
+            tr.appendChild(el("div", { class: wide ? "c-wide" : "" }, [node]));
           });
-          item.appendChild(grid);
-          if (!state.cab.locked && list.length > 1) item.appendChild(el("button", { class: "ak-link", text: "Удалить", onclick: function () { list.splice(i, 1); changed(); draw(); } }));
-          box.appendChild(item);
+          tr.appendChild(!ro && list.length > 1 ? el("button", { class: "ak-x", title: "Удалить строку", text: "×", onclick: function () { list.splice(i, 1); changed(); draw(); } }) : el("div", { class: "ak-x-none" }));
+          tbl.appendChild(tr);
         });
-        if (!state.cab.locked) box.appendChild(el("button", { class: "ak-link", text: f.add || "+ Добавить", onclick: function () { list.push({}); draw(); } }));
+        box.appendChild(tbl);
+        if (!ro) box.appendChild(el("button", { class: "ak-link", style: "font-size:14px;margin-top:6px", text: f.add || "+ Добавить", onclick: function () { list.push({}); draw(); } }));
       }
       draw();
       return box;
@@ -524,12 +540,13 @@
       state.showIf = [];
       it.fields.forEach(function (f) {
         if (f.type === "section") {
-          form.appendChild(el("div", { class: "ak-section", text: f.label }));
-          if (f.hint) form.appendChild(el("div", { class: "ak-hint", text: f.hint }));
+          form.appendChild(el("div", { class: "ak-section wide", text: f.label }));
+          if (f.hint) form.appendChild(el("div", { class: "ak-hint wide", text: f.hint }));
         } else if (f.type === "rows") form.appendChild(rowsField(f));
         else form.appendChild(field(f, state.data, f.id));
       });
       root.appendChild(form);
+      requestAnimationFrame(growAll);
       var status = el("span", { class: "ak-save", id: "ak-save", text: it.updated_at ? "Сохранено " + when(it.updated_at) : "" });
       var err = el("div", { class: "ak-err", id: "ak-err" });
       var btn = el("button", { class: "ak-btn", text: it.status === "sent" ? "Отправить исправления" : "Отправить Никите", onclick: submit });
@@ -603,6 +620,7 @@
     <a href="/oferta/">Договор-оферта</a>
     <a href="/privacy/">Политика конфиденциальности</a>
     <a href="#cookie" data-cookie-settings>Настройки cookie</a>
+    <a href="/login/" onclick="this.href='/login/?back='+encodeURIComponent(location.pathname+location.search+location.hash)">Admin Login</a>
     <span>I.E. Nikita Evsey · ID 305518329 · Tbilisi, Georgia</span>
     <a href="mailto:hello@astrotherapiest.com">hello@astrotherapiest.com</a>
   </div>
