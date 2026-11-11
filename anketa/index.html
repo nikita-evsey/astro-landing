@@ -275,7 +275,16 @@
     .ak-btn[disabled] { opacity: .5; cursor: default; }
     .ak-link { background: none; border: 0; padding: 0; font: inherit; font-size: 16px; color: var(--ink); text-decoration: underline; text-decoration-color: var(--accent); cursor: pointer; }
     /* Плотная раскладка (решение Никиты 2026-11-11): максимум информации на экране, события – таблицей. */
-    main:has(#ak) { max-width: 1120px; padding-top: 28px; }
+    main:has(#ak) { max-width: none; padding: 28px 24px 40px; }
+    @media (max-width: 640px) { main:has(#ak) { padding: 20px 14px 32px; } }
+    /* Цвет типа события (решение Никиты 2026-11-11): отношения – голубой, дети – зелёный, переезд – жёлтый,
+       деньги и работа – фиолетовый, кризисы – красный, смерть – серый. */
+    .ak-form select[data-tone="love"], option[data-tone="love"] { background-color: #d8e8fa; }
+    .ak-form select[data-tone="kids"], option[data-tone="kids"] { background-color: #d6efd3; }
+    .ak-form select[data-tone="move"], option[data-tone="move"] { background-color: #fbf0bf; }
+    .ak-form select[data-tone="money"], option[data-tone="money"] { background-color: #e5dbf6; }
+    .ak-form select[data-tone="crisis"], option[data-tone="crisis"] { background-color: #f7d2d2; }
+    .ak-form select[data-tone="death"], option[data-tone="death"] { background-color: #dcdcdc; }
     #ak h1 { margin: 6px 0 4px; }
     #ak p { margin: 6px 0; }
     .ak-form { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px 14px; align-items: start; }
@@ -292,6 +301,11 @@
     .ak-tbl textarea.one { min-height: 0; height: 34px; }
     .ak-tr { display: contents; }
     .ak-x { background: none; border: 0; color: var(--muted); font-size: 18px; line-height: 32px; cursor: pointer; padding: 0 4px; }
+    .ak-ops { display: flex; align-items: center; }
+    .ak-ops button { background: none; border: 0; color: var(--muted); font-size: 15px; line-height: 32px; cursor: pointer; padding: 0 3px; }
+    .ak-ops button:hover { color: var(--accent); }
+    .ak-ops button[disabled] { visibility: hidden; }
+    .ak-tools { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 6px; font-size: 14px; }
     .ak-x:hover { color: var(--accent); }
     /* Телефон: каждая строка – своя карточка: короткие поля по два в ряд, длинные – на всю ширину. */
     @media (max-width: 640px) {
@@ -301,9 +315,8 @@
       .ak-tr:nth-child(2) { border-top: 0; }
       .ak-tr > div { flex: 1 1 40%; min-width: 0; }
       .ak-tr > .c-wide { flex-basis: 100%; }
-      .ak-tr > .ak-x { position: absolute; right: 0; top: 8px; }
-      .ak-tr > .ak-x-none { display: none; }
-      .ak-tr { position: relative; padding-right: 26px; }
+      .ak-tr > .ak-ops { position: absolute; right: 0; top: 8px; flex-direction: column; }
+      .ak-tr { position: relative; padding-right: 28px; }
     }
     .ak-ex { font-size: 13px; color: var(--muted); margin: 4px 0 8px; padding-left: 18px; }
     .ak-ex li { margin: 2px 0; }
@@ -332,6 +345,7 @@
     function el(tag, attrs, kids) {
       var e = document.createElement(tag);
       for (var k in (attrs || {})) {
+        if (attrs[k] == null) continue;
         if (k === "text") e.textContent = attrs[k];
         else if (k === "class") e.className = attrs[k];
         else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), attrs[k]);
@@ -449,7 +463,17 @@
       var ro = state.cab.locked, node;
       if (f.type === "textarea") { node = el("textarea", { rows: f.one ? 1 : 3, class: f.one ? "one" : "" }); node.addEventListener("input", function () { grow(node); }); setTimeout(function () { grow(node); }, 0); }
       else if (f.type === "select") {
-        node = el("select", {}, [el("option", { value: "", text: "—" })].concat(f.options.map(function (o) { return el("option", { value: o, text: o }); })));
+        var opts = f.options.slice();
+        if (value && opts.indexOf(value) < 0) opts.push(value);   // старое значение не из списка – не теряем
+        node = el("select", {}, [el("option", { value: "", text: "—" })].concat(opts.map(function (o) {
+          var op = el("option", { value: o, text: o });
+          if (f.tone && f.tone[o]) op.setAttribute("data-tone", f.tone[o]);
+          return op;
+        })));
+        if (f.tone) {
+          var paint = function () { var t = f.tone[node.value]; if (t) node.setAttribute("data-tone", t); else node.removeAttribute("data-tone"); };
+          node.addEventListener("change", paint); setTimeout(paint, 0);
+        }
       } else node = el("input", { type: f.type === "date" ? "date" : f.type === "time" ? "time" : "text" });
       // Подсказки: выбрать готовый ответ или вписать свой.
       if (f.suggest && f.suggest.length) {
@@ -494,36 +518,74 @@
     function isWide(sf) { return sf.id === "comment" || sf.id === "place"; }
     function colOf(sf) {
       if (isWide(sf)) return "minmax(160px, 1fr)";
-      if (sf.type === "select") return "minmax(150px, 240px)";
+      if (sf.type === "select") return "minmax(230px, 300px)";
       if (sf.type === "date") return "150px";
       if (sf.type === "time") return "90px";
       return "minmax(110px, 170px)";
     }
+    // Ключ даты для сортировки событий: «03.2021», «07.10.2010», «осень 2019», «1998–1999, примерно», «май 1939».
+    var MONTHS = [["осен", 10], ["зим", 1], ["весн", 4], ["лето", 7],   // сезоны – первыми: в «осень» есть «сен»
+                  ["янв", 1], ["фев", 2], ["мар", 3], ["апр", 4], ["мая", 5], ["май", 5], ["июн", 6], ["июл", 7], ["авг", 8], ["сен", 9], ["окт", 10], ["ноя", 11], ["дек", 12]];
+    function dateKey(v) {
+      var s = String(v || "").toLowerCase(), y = s.match(/(1[89]\d\d|20\d\d)/), m = 0, d = 0, x;
+      if (!y) return null;
+      if ((x = s.match(/(\d{1,2})\.(\d{1,2})\.(1[89]\d\d|20\d\d)/))) { d = +x[1]; m = +x[2]; }
+      else if ((x = s.match(/(\d{1,2})\s*[–-]\s*\d{1,2}\.(1[89]\d\d|20\d\d)/))) m = +x[1];
+      else if ((x = s.match(/(\d{1,2})\.(1[89]\d\d|20\d\d)/))) m = +x[1];
+      else for (var i = 0; i < MONTHS.length; i++) if (s.indexOf(MONTHS[i][0]) >= 0) { m = MONTHS[i][1]; break; }
+      return +y[1] * 10000 + m * 100 + d;
+    }
+    // Хронология: строки с датой – по возрастанию (при равенстве – как стояли), без даты – в конце.
+    function sortRows(list, key) {
+      var withIdx = list.map(function (r, i) { return { r: r, i: i, k: dateKey(r[key]) }; });
+      withIdx.sort(function (a, b) {
+        if (a.k == null && b.k == null) return a.i - b.i;
+        if (a.k == null) return 1;
+        if (b.k == null) return -1;
+        return a.k - b.k || a.i - b.i;
+      });
+      for (var i = 0; i < withIdx.length; i++) list[i] = withIdx[i].r;
+    }
+
     function rowsField(f) {
       var box = el("div", { class: "ak-rows wide" });
       if (!Array.isArray(state.data[f.id])) state.data[f.id] = [];
       var list = state.data[f.id];
       if (!list.length) list.push({});
-      var ro = state.cab.locked;
+      var ro = state.cab.locked, focusRow = -1;
       function draw() {
         while (box.firstChild) box.removeChild(box.firstChild);
         var tbl = el("div", { class: "ak-tbl" });
-        tbl.style.gridTemplateColumns = f.fields.map(colOf).join(" ") + " 24px";
+        tbl.style.gridTemplateColumns = f.fields.map(colOf).join(" ") + " 64px";
         tbl.appendChild(el("div", { class: "ak-tr head" }, f.fields.map(function (sf) { return el("div", { class: "th", text: sf.label }); }).concat([el("div", {})])));
         list.forEach(function (row, i) {
           var tr = el("div", { class: "ak-tr" });
+          if (i === focusRow) setTimeout(function () { tr.scrollIntoView({ block: "nearest" }); }, 0);
           f.fields.forEach(function (sf) {
             var wide = isWide(sf);
             var node = input(wide ? { id: sf.id, type: "textarea", one: true } : sf, row[sf.id], function (v) { row[sf.id] = v; changed(); });
+            // Дату ввели или поменяли – строка встаёт на своё место по хронологии.
+            if (f.sortBy === sf.id && !ro) node.addEventListener("change", function () {
+              var before = list.indexOf(row); sortRows(list, f.sortBy);
+              if (list.indexOf(row) !== before) { focusRow = list.indexOf(row); changed(); draw(); focusRow = -1; }
+            });
             node.setAttribute("aria-label", sf.label);
             if (sf.type !== "select" && sf.type !== "date" && sf.type !== "time") node.setAttribute("placeholder", sf.label);
             tr.appendChild(el("div", { class: wide ? "c-wide" : "" }, [node]));
           });
-          tr.appendChild(!ro && list.length > 1 ? el("button", { class: "ak-x", title: "Удалить строку", text: "×", onclick: function () { list.splice(i, 1); changed(); draw(); } }) : el("div", { class: "ak-x-none" }));
+          var move = function (to) { list.splice(i, 1); list.splice(to, 0, row); focusRow = to; changed(); draw(); focusRow = -1; };
+          tr.appendChild(ro ? el("div", {}) : el("div", { class: "ak-ops" }, [
+            el("button", { title: "Выше", text: "↑", disabled: i === 0 ? "" : null, onclick: function () { move(i - 1); } }),
+            el("button", { title: "Ниже", text: "↓", disabled: i === list.length - 1 ? "" : null, onclick: function () { move(i + 1); } }),
+            list.length > 1 ? el("button", { class: "ak-x", title: "Удалить строку", text: "×", onclick: function () { list.splice(i, 1); changed(); draw(); } }) : null,
+          ]));
           tbl.appendChild(tr);
         });
         box.appendChild(tbl);
-        if (!ro) box.appendChild(el("button", { class: "ak-link", style: "font-size:14px;margin-top:6px", text: f.add || "+ Добавить", onclick: function () { list.push({}); draw(); } }));
+        if (!ro) box.appendChild(el("div", { class: "ak-tools" }, [
+          el("button", { class: "ak-link", style: "font-size:14px", text: f.add || "+ Добавить", onclick: function () { list.push({}); focusRow = list.length - 1; draw(); focusRow = -1; } }),
+          f.sortBy ? el("button", { class: "ak-link", style: "font-size:14px", text: "Расставить по датам", onclick: function () { sortRows(list, f.sortBy); changed(); draw(); } }) : null,
+        ]));
       }
       draw();
       return box;
