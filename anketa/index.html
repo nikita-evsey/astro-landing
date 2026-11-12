@@ -384,13 +384,6 @@
     .ak-tree-stage.elk > .ak-person { position: absolute; }
     .ak-genl { position: absolute; left: 6px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); pointer-events: none; }
     .ak-tree-svg .vu { fill: #9a9183; }
-    /* Фото: аватар в карточке – маленький кружок, чтобы карточка не росла. */
-    .ak-person.has-av { padding-right: 42px; }
-    .ak-person .av { position: absolute; right: 6px; top: 6px; width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--rule); background: #eee; }
-    .ak-person.has-av .a { top: auto; bottom: 3px; }
-    .ak-photo { display: flex; align-items: center; gap: 10px; margin: 8px 0; flex-wrap: wrap; }
-    .ak-photo img { width: 110px; height: 110px; object-fit: cover; border-radius: 8px; border: 1px solid var(--rule); display: block; }
-    .ak-photo.round img { width: 64px; height: 64px; border-radius: 50%; }
     .ak-death { border-top: 1px solid var(--rule); margin-top: 10px; padding-top: 8px; }
     .ak-death .ak-form { margin-top: 6px; }
     .ak-tree-svg .ln.stub { stroke-dasharray: 3 3; opacity: .55; pointer-events: stroke; cursor: help; }
@@ -799,26 +792,6 @@
       return b || String(d.name || "").trim();
     }
 
-    // ---------- фото (решение Никиты 2026-11-11): уменьшаем в браузере и грузим на сервер, в древе – только id ----------
-    function photoUrl(id) { return window.AK_PHOTO ? window.AK_PHOTO(id) : API + "/photo?t=" + encodeURIComponent(token) + "&id=" + encodeURIComponent(id); }
-    function pickPhoto(max, done, start, fail) {
-      var f = el("input", { type: "file", accept: "image/*" });
-      f.onchange = function () {
-        var file = f.files && f.files[0]; if (!file) return;
-        if (start) start();
-        var img = new Image(), url = URL.createObjectURL(file);
-        img.onload = function () {
-          var k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
-          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-          api("/photo", { data: c.toDataURL("image/jpeg", 0.85) }).then(function (r) { done(r.id); }).catch(function (e) { alert(e.message); if (fail) fail(); });
-        };
-        img.onerror = function () { alert("Не получилось открыть фото – попробуйте JPG или PNG."); if (fail) fail(); };
-        img.src = url;
-      };
-      f.click();
-    }
-
     // ---------- раскладка древа – библиотека ELK (layered, ортогональные линии), решение Никиты 2026-11-11 ----------
     // Люди – узлы, каждый брак (и пара родителей без брака) – маленький узел между рядами: супруги -> узел брака -> дети.
     // Поколения держит partition; порядок в ряду – подсказка из нашей раскладки (мама слева, папа справа), остальное считает ELK.
@@ -1005,10 +978,10 @@
       // Всё второстепенное – наружу от своей стороны: сначала супруги (текущие ближе, бывшие дальше), дальше братья и сёстры, сводные,
       // их семьи. Ряд натива: рядом супруг(а), братья и сёстры по бокам (сёстры слева, братья справа), мамины сводные – слева, папины – справа.
       // Ниже – дети под своей парой родителей, по году рождения.
-      // Бабушки и дедушки (и все предки выше) по умолчанию в браке (решение Никиты 2026-11-12): если у родителя натива (или предка выше)
+      // Родители натива, бабушки-дедушки и все предки выше по умолчанию в браке (решение Никиты 2026-11-12): если у натива (или предка)
       // указаны оба родителя, а союза между ними нет – добавляем брак без дат. Его можно поправить (развод, годы) в карточке.
       function autoMarry() {
-        var seen = {}, q = bloodParents("me").slice();
+        var seen = {}, q = ["me"];
         while (q.length) {
           var a = q.shift(); if (seen[a]) continue; seen[a] = true;
           var ps = bloodParents(a);
@@ -1428,7 +1401,7 @@
       }
 
       function card(p, cards) {
-        var t = cardText(p), c = el("button", { type: "button", class: "ak-person" + (p.id === "me" ? " me" : "") + (sel === p.id ? " sel" : "") + (isMark(p.id) ? " loyal" : "") + (isDead(p) ? " dead" : "") + (pale(p) ? " pale" : "") + (p.photo ? " has-av" : ""),
+        var t = cardText(p), c = el("button", { type: "button", class: "ak-person" + (p.id === "me" ? " me" : "") + (sel === p.id ? " sel" : "") + (isMark(p.id) ? " loyal" : "") + (isDead(p) ? " dead" : "") + (pale(p) ? " pale" : ""),
           onclick: function () { sel = sel === p.id ? null : p.id; draw(); showPanel(); } }, [
           el("span", { class: "r", text: (isMark(p.id) ? "★ " : "") + t.rel }),
           el("span", { class: "n", text: t.name || "Имя?" }),
@@ -1438,7 +1411,6 @@
           t.died ? el("span", { class: "d", text: t.died }) : null,
           t.dplace ? el("span", { class: "pl", text: t.dplace }) : null,
           t.grave ? el("span", { class: "pl", text: t.grave }) : null,
-          p.photo ? el("img", { class: "av", src: photoUrl(p.photo), alt: "" }) : null,
           p.anketa ? el("span", { class: "a", text: "анкета" }) : null,
         ]);
         cards[p.id] = c;
@@ -1673,21 +1645,6 @@
         return boxU;
       }
 
-      // Фото человека (аватар) или могилы: превью, «загрузить / заменить / убрать».
-      function photoBlock(label, get, set, round) {
-        var w = el("div", { class: "ak-photo" + (round ? " round" : "") }), id = get();
-        if (id) w.appendChild(el("a", { href: photoUrl(id), target: "_blank", rel: "noopener" }, [el("img", { src: photoUrl(id), alt: label })]));
-        if (!ro) {
-          var b = el("button", { type: "button", class: "ak-chip", text: id ? "Заменить " + label : "+ " + label });
-          b.onclick = function () {
-            pickPhoto(round ? 480 : 1200, function (nid) { set(nid); changed(); draw(); showPanel(); },
-              function () { b.disabled = true; b.textContent = "Загружаю…"; }, function () { b.disabled = false; b.textContent = id ? "Заменить " + label : "+ " + label; });
-          };
-          w.appendChild(b);
-          if (id) w.appendChild(el("button", { type: "button", class: "ak-link", style: "font-size:13px", text: "Убрать", onclick: function () { set(null); changed(); draw(); showPanel(); } }));
-        }
-        return w;
-      }
       // Умер(ла) – можно отметить и без даты (решение Никиты 2026-11-11); тогда – дата и место смерти и всё про могилу.
       var GRAVE_STATE = [["", "—"], ["unknown", "неизвестно"], ["bad", "неудовлетворительное"], ["ok", "удовлетворительное"], ["good", "хорошее"]];
       function deathBlock(p) {
@@ -1710,7 +1667,6 @@
         cell("Когда последний раз приводили в порядок", dateInput(g.cleaned, function (v) { setG("cleaned", v); }));
         cell("Комментарий про могилу", input({ id: "tree-grave-comment", type: "textarea" }, g.comment, function (v) { setG("comment", v); }), true);
         box.appendChild(grid);
-        box.appendChild(photoBlock("фото могилы", function () { return (p.grave || {}).photo; }, function (v) { p.grave = p.grave || {}; if (v) p.grave.photo = v; else delete p.grave.photo; }, false));
         return box;
       }
 
@@ -1770,7 +1726,6 @@
           panel.appendChild(mg);
           panel.appendChild(el("div", { class: "ak-hint", text: "Это те же поля, что в начале анкеты, – меняются и там." }));
         }
-        panel.appendChild(photoBlock("фото", function () { return p.photo; }, function (v) { if (v) p.photo = v; else delete p.photo; }, true));
         panel.appendChild(deathBlock(p));
         panel.appendChild(unionsBlock(p));
         if (!ro) {
