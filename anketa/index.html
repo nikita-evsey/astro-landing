@@ -1217,7 +1217,7 @@
       }
 
       var wrap = el("div", { class: "ak-tree-scroll" }), stage = el("div", { class: "ak-tree-stage" }), panel = el("div", { class: "ak-tree-panel" });
-      var modeBar = el("div", { class: "ak-tree-mode" }), lastCore = {};
+      var modeBar = el("div", { class: "ak-tree-mode" }), lastCore = {}, lastGen = {};
       wrap.appendChild(stage); box.appendChild(modeBar); box.appendChild(wrap); box.appendChild(panel);
 
       function cardText(p) {
@@ -1250,6 +1250,7 @@
         var seq = ++drawSeq, L = layout(), cards = {}, gen = {}, vis = [];
         lastCore = L.core; modeButtons(L);
         Object.keys(L.rows).forEach(function (g) { L.rows[g].forEach(function (p) { gen[p.id] = +g; vis.push(p); }); });
+        lastGen = gen;
         // Карточки меряем в скрытом слое – ELK нужны точные размеры.
         var next = el("div", { class: "ak-tree-stage elk" }); next.style.cssText = "visibility:hidden;position:absolute;left:0;top:0";
         wrap.appendChild(next);
@@ -1463,7 +1464,8 @@
         stage.className = "ak-tree-stage"; stage.style.width = ""; stage.style.height = "";
         while (stage.firstChild) stage.removeChild(stage.firstChild);
         var L = layout(), cards = {};
-        lastCore = L.core;
+        lastCore = L.core; lastGen = {};
+        Object.keys(L.rows).forEach(function (g) { L.rows[g].forEach(function (q) { lastGen[q.id] = +g; }); });
         var narrow = window.innerWidth <= 640, CW = narrow ? 124 : 148, SLOT = CW + (narrow ? 22 : 40);
         modeButtons(L);
         var gens = Object.keys(L.rows).map(Number).sort(function (a, b) { return b - a; });
@@ -1796,6 +1798,21 @@
           lw.appendChild(input({ id: "tree-life", type: "textarea" }, p.life, function (v) { p.life = v; changed(); }));
           grid.appendChild(lw);
           panel.appendChild(grid);
+          // Все, кто ниже натива на древе (дети, внуки, дети братьев и сестёр, бывших супругов…): беременность и роды –
+          // две колонки, поля растут по тексту (решение Никиты 2026-11-12). Не на древе сейчас (основной вид) – потомки натива.
+          var natv = view ? natId() : "me", below = false;
+          if (natv && lastGen[p.id] != null && lastGen[natv] != null) below = lastGen[p.id] < lastGen[natv];
+          else if (natv) { var dq = [natv], seenD = {}; while (dq.length && !below) { var dc = dq.shift(); if (seenD[dc]) continue; seenD[dc] = true; childrenOf(dc).forEach(function (k) { if (k.id === p.id) below = true; dq.push(k.id); }); } }
+          if (below) {
+            var kb = el("div", { class: "ak-death2" });
+            [["pregnancy", "Обстоятельства беременности"], ["birth_how", "Обстоятельства родов"]].forEach(function (d) {
+              var c = el("div", { class: "ak-form" }), w = el("div");
+              w.appendChild(el("label", { text: d[1] }));
+              w.appendChild(input({ id: "tree-" + d[0], type: "textarea", one: true }, p[d[0]], function (v) { p[d[0]] = v; changed(); }));
+              c.appendChild(w); kb.appendChild(c);
+            });
+            panel.appendChild(kb);
+          }
           // Брат / сестра: какие родители общие (сводные – не все).
           var ref = p.same ? byId(p.same) : p.sib ? byId(p.sib) : null;
           if (ref && parentsOf(ref).length) {
