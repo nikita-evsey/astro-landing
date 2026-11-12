@@ -1310,7 +1310,8 @@
           Object.keys(uRows).forEach(function (r) {
             var list = uRows[r].sort(function (a, b) { return (a.hi - a.lo) - (b.hi - b.lo); }), lv = [];
             list.forEach(function (q) {
-              var l = 0; while ((lv[l] || []).some(function (o) { return q.lo < o.hi - 1 && o.lo < q.hi - 1; })) l++;
+              // Пары с общим человеком (два брака Ольги – слева и справа от неё) тоже разводим по высоте, иначе горизонтали сливаются в одну.
+              var l = 0; while ((lv[l] || []).some(function (o) { return q.lo < o.hi + 1 && o.lo < q.hi + 1; })) l++;
               (lv[l] = lv[l] || []).push(q); q.n.y += l * 8;
             });
             list.forEach(function (q) {
