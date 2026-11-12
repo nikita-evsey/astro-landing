@@ -1357,6 +1357,8 @@
               path("M" + q.x + " " + g2.busY + " V" + q.t, cls);
               addLin(m.c.id, ["M" + g2.x + " " + g2.y + " V" + g2.busY + " H" + q.x + " V" + q.t].concat(partnerD[m.src] || []), m.ps);
               if (m.ps.some(function (pid) { return bold[m.c.id + "|" + pid]; })) path("M" + g2.x + " " + g2.y + " V" + g2.busY + " H" + q.x + " V" + q.t, "ln bold");
+              // Красная линия рода не прерывается: от значка брака – до карточки родителя по этой линии.
+              (upart[m.src] || []).forEach(function (pid, i) { if (bold[m.c.id + "|" + pid] && partnerD[m.src]) path(partnerD[m.src][i], "ln bold"); });
             });
           });
           (res.edges || []).forEach(function (e) {
