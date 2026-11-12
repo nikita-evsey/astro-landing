@@ -397,6 +397,8 @@
     .ak-seg button[disabled] { cursor: default; }
     .ak-seg button[disabled]:not(.on) { opacity: .45; }
     .ak-death2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; margin-top: 8px; align-items: start; }
+    .ak-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; align-items: start; }
+    @media (max-width: 640px) { .ak-pair { grid-template-columns: minmax(0, 1fr); } }
     .ak-death2.solo { grid-template-columns: minmax(0, 1fr); max-width: 420px; }
     .ak-death2 > .ak-form { grid-template-columns: minmax(0, 1fr); margin: 0; }
     .ak-death2 .ak-col-t { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 2px; }
@@ -1774,7 +1776,8 @@
 
       // Беременность матери и роды (решение Никиты 2026-11-12): у натива, его ряда и всех ниже – поля сразу (две колонки, растут по тексту);
       // у тех, кто выше, – ссылки «+ …», поле появляется по нажатию (или если уже заполнено).
-      var BIRTH_F = [["pregnancy", "Как проходила беременность матери"], ["birth_how", "Как прошли роды"]];
+      // У того, чья это анкета (me), – те же поля анкеты, что над древом (pregnancy, birth_story): правка видна и там.
+      var BIRTH_F = [["pregnancy", "Как проходила беременность матери", "pregnancy"], ["birth_how", "Обстоятельства рождения", "birth_story"]];
       function birthBlock(p) {
         var natv = view ? natId() : "me", open = false;
         if (natv && lastGen[p.id] != null && lastGen[natv] != null) open = lastGen[p.id] <= lastGen[natv];
@@ -1786,9 +1789,13 @@
         BIRTH_F.forEach(function (d) {
           var c = el("div", { class: "ak-form" }), w = el("div");
           w.appendChild(el("label", { text: d[1] }));
-          w.appendChild(input({ id: "tree-" + d[0], type: "textarea", one: true }, p[d[0]], function (v) { p[d[0]] = v; changed(); }));
+          var mine = p.id === "me", hold = mine ? state.data : p, key = mine ? d[2] : d[0];
+          w.appendChild(input({ id: "tree-" + d[0], type: "textarea", one: true }, hold[key], function (v) {
+            hold[key] = v; changed();
+            if (mine) { var top = document.querySelector('#ak [data-f="' + key + '"]'); if (top && top.value !== v) { top.value = v; grow(top); } }
+          }));
           c.appendChild(w); kb.appendChild(c);
-          if (!open && !String(p[d[0]] || "").trim()) {
+          if (!open && !String(hold[key] || "").trim()) {
             c.style.display = "none";
             if (!ro) {
               var b = el("button", { type: "button", class: "ak-link", style: "font-size:14px;margin-right:14px", text: "+ " + d[1].charAt(0).toLowerCase() + d[1].slice(1),
@@ -1955,7 +1962,10 @@
           form.appendChild(dw);
         }
         else if (["text", "textarea", "select", "date", "time"].indexOf(f.type) >= 0) {   // date3 – только в строках и древе
-          if (f.group) {
+          if (f.pair) {   // два поля рядом (беременность и рождение); на телефоне – друг под другом
+            if (!groups["pair:" + f.pair]) { groups["pair:" + f.pair] = el("div", { class: "wide ak-pair" }); form.appendChild(groups["pair:" + f.pair]); }
+            var pw = field(f, state.data, f.id); pw.className = ""; groups["pair:" + f.pair].appendChild(pw);
+          } else if (f.group) {
             if (!groups[f.group]) {
               var g = el("div", { class: "ak-form" });
               form.appendChild(el("div", { class: "ak-group" }, [el("div", { class: "ak-group-t", text: f.group }), g]));
