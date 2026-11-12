@@ -396,10 +396,11 @@
     .ak-person.pale > * { opacity: .45; }
     .ak-tree-svg .ln.union { stroke: #7d7466; stroke-width: 1.3; }
     .ak-tree-svg .ln.union.former { stroke-dasharray: 5 4; }
-    .ak-tree-svg .ul { font-size: 9.5px; fill: var(--muted); }
+    /* Годы и значки браков поверх линий – на почти непрозрачной подложке цвета бумаги: линия чуть видна, но не мешает читать (решение Никиты 2026-11-12). */
+    .ak-tree-svg .ul { font-size: 9.5px; fill: var(--muted); paint-order: stroke; stroke: rgba(250, 247, 241, .85); stroke-width: 5px; stroke-linejoin: round; }
     .ak-tree-svg .ul.former { fill: #b3aa9c; }
     .ak-tree-svg .ul.side { text-anchor: start; }
-    .ak-tree-svg .ub circle { fill: #fff; stroke: #7d7466; stroke-width: 1.2; }
+    .ak-tree-svg .ub circle { fill: rgba(255, 255, 255, .85); stroke: #7d7466; stroke-width: 1.2; }
     .ak-tree-svg .ub text { font-size: 12px; fill: #3d362c; }
     .ak-tree-svg .ub.former circle { stroke: #b3aa9c; stroke-dasharray: 2 2; }
     .ak-tree-svg .ub.former text { fill: #9a9183; }
