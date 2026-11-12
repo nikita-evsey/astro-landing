@@ -389,6 +389,19 @@
     .ak-tree-svg .vu { fill: #9a9183; }
     .ak-death { border-top: 1px solid var(--rule); margin-top: 10px; padding-top: 8px; }
     .ak-death .ak-form { margin-top: 6px; }
+    /* Жив / умер – переключатель; у умерших две колонки: слева смерть, справа могила (решение Никиты 2026-11-12). */
+    .ak-seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+    .ak-seg button { font: inherit; font-size: 14px; padding: 5px 14px; border: 0; background: #fff; color: var(--ink); cursor: pointer; }
+    .ak-seg button + button { border-left: 1px solid var(--rule); }
+    .ak-seg button.on { background: #2f5d8a; color: #fff; }
+    .ak-seg button[disabled] { cursor: default; }
+    .ak-seg button[disabled]:not(.on) { opacity: .45; }
+    .ak-death2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; margin-top: 8px; align-items: start; }
+    .ak-death2.solo { grid-template-columns: minmax(0, 1fr); max-width: 420px; }
+    .ak-death2 > .ak-form { grid-template-columns: minmax(0, 1fr); margin: 0; }
+    .ak-death2 .ak-col-t { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 2px; }
+    .ak-death2 textarea.one { min-height: 0; height: 34px; }
+    @media (max-width: 640px) { .ak-death2 { grid-template-columns: minmax(0, 1fr); } }
     .ak-tree-svg .ln.stub { stroke-dasharray: 3 3; opacity: .55; pointer-events: stroke; cursor: help; }
     .ak-tree-svg .stubdot { fill: var(--muted); opacity: .6; }
     .ak-tree-mode { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 6px; }
@@ -644,7 +657,7 @@
       if (o.note && o.note !== s) s = s ? s + " (" + o.note + ")" : o.note;
       return s;
     }
-    function dateInput(value, onchange) {
+    function dateInput(value, onchange, noDay) {
       var v = value && typeof value === "object" ? value : (value ? { note: String(value) } : {});
       var ro = state.cab.locked;
       var d = el("input", { type: "text", inputmode: "numeric", placeholder: "день", maxlength: "2", class: "d3-d", "aria-label": "День" });
@@ -662,7 +675,7 @@
       }
       [d, y].forEach(function (n) { n.disabled = ro; n.addEventListener("input", upd); });
       [m, a].forEach(function (n) { n.disabled = ro; n.addEventListener("change", upd); });
-      var box = el("div", { class: "ak-d3" }, [d, m, y, el("label", { class: "ak-d3-a", title: "Дата неточная" }, [a, " примерно"])]);
+      var box = el("div", { class: "ak-d3" }, [noDay ? null : d, m, y, el("label", { class: "ak-d3-a", title: "Дата неточная" }, [a, " примерно"])]);
       return box;
     }
 
@@ -764,9 +777,6 @@
     var REL_ME = { mother: "Мама", father: "Папа", stepmother: "Мачеха", stepfather: "Отчим", brother: "Брат", sister: "Сестра",
       halfbrother: "Сводный брат", halfsister: "Сводная сестра", partner: "Супруг(а)", son: "Сын", daughter: "Дочь",
       adoptson: "Приёмный сын", adoptdaughter: "Приёмная дочь" };
-    var REL_SUGGEST = ["Мама", "Папа", "Отчим", "Мачеха", "Брат", "Сестра", "Сводный брат", "Сводная сестра", "Муж", "Жена", "Бывший муж", "Бывшая жена", "Партнёр",
-      "Сын", "Дочь", "Приёмный сын", "Приёмная дочь", "Бабушка по маме", "Дедушка по маме", "Бабушка по папе", "Дедушка по папе", "Тётя по маме", "Дядя по маме", "Тётя по папе", "Дядя по папе",
-      "Прабабушка", "Прадедушка", "Двоюродный брат", "Двоюродная сестра", "Крёстная", "Крёстный"];
     var GEN_NAME = { 3: "Прабабушки и прадедушки", 2: "Бабушки и дедушки", 1: "Родители", 0: "Поколение", "-1": "Дети", "-2": "Внуки" };
     var U_KIND = [["marriage", "брак"], ["civil", "гражданский брак"], ["relationship", "отношения"]];
     var U_END = [["", "вместе"], ["divorce", "развод"], ["split", "расстались"], ["widow", "вдовство (партнёр умер)"]];
@@ -993,7 +1003,24 @@
           ps.forEach(function (p) { q.push(p); });
         }
       }
+      // Родители и бабушки-дедушки натива – на древе всегда, даже пустые (решение Никиты 2026-11-12): люди добавляют родню по очереди,
+      // пустая карточка подсказывает, кого заполнить. Добавляются в данные (сохранятся со следующим сохранением), «кем приходится» – по связи.
+      function ensureCore() {
+        if (view || !byId("me")) return;
+        var fill = function (x) {
+          var ps = bloodParents(x.id);
+          var kinds = ps.length >= 2 ? [] : ps.length === 1 ? [sexOf(byId(ps[0])) === "m" ? "mother" : "father"] : ["mother", "father"];
+          kinds.forEach(function (kind) {
+            if (x.same) { x.parents = parentsOf(x).slice(); x.sib = x.same; delete x.same; }
+            var np = { id: newId(), rel: relFor(kind, x), first: "", parents: [], sex: KIND_SEX[kind] };
+            P.push(np); arr(x, "parents").push(np.id);
+          });
+          return bloodParents(x.id);
+        };
+        fill(byId("me")).forEach(function (pid) { fill(byId(pid)); });
+      }
       function layout() {
+        ensureCore();
         autoMarry();
         var CS = coreSet(), core = CS.core, show = {}, gen = {}, x = {}, side = {}, ped = {}, pedRow = {};
         if (sel && mode === "core" && !core[sel] && byId(sel) && linked(byId(sel))) mode = "ext";   // открыли второстепенного – показываем всё
@@ -1714,38 +1741,48 @@
       // Умер(ла) – можно отметить и без даты (решение Никиты 2026-11-11); тогда – дата и место смерти и всё про могилу.
       var GRAVE_STATE = [["", "—"], ["unknown", "неизвестно"], ["bad", "неудовлетворительное"], ["ok", "удовлетворительное"], ["good", "хорошее"]];
       function deathBlock(p) {
-        var box = el("div", { class: "ak-death" }), dead = isDead(p);
-        var dc = el("input", { type: "checkbox" }); dc.checked = dead; dc.disabled = ro || (p.id !== "me" && !!fmtParts(p.death)) || (p.id === "me" && !!fmtParts(state.data.death_date));
-        dc.onchange = function () { if (dc.checked) p.dead = true; else delete p.dead; changed(); draw(); showPanel(); };
-        box.appendChild(el("label", { class: "ak-check-inline" }, [dc, " Умер(ла)" + (dc.disabled && dead ? " – есть дата смерти" : ", даже если дата неизвестна")]));
+        var box = el("div", { class: "ak-death" }), dead = isDead(p), sx = sexOf(p);
+        var locked = ro || (p.id !== "me" && !!fmtParts(p.death)) || (p.id === "me" && !!fmtParts(state.data.death_date));   // есть дата смерти – только «умер»
+        var setDead = function (v) { if (v === dead) return; if (v) p.dead = true; else delete p.dead; changed(); draw(); showPanel(); };
+        var bA = el("button", { type: "button", class: dead ? "" : "on", text: sx === "f" ? "Жива" : sx === "m" ? "Жив" : "Жив(а)", onclick: function () { setDead(false); } });
+        var bD = el("button", { type: "button", class: dead ? "on" : "", text: sx === "f" ? "Умерла" : sx === "m" ? "Умер" : "Умер(ла)", onclick: function () { setDead(true); } });
+        bA.disabled = bD.disabled = locked;
+        box.appendChild(el("div", { class: "ak-seg", title: locked && dead && !ro ? "Указана дата смерти" : "" }, [bA, bD]));
         if (!dead) return box;
-        var grid = el("div", { class: "ak-form ak-tree-fields" });
-        var cell = function (label, node, wide) { var w = el("div", { class: wide ? "wide" : "fld" + (node.classList && node.classList.contains("ak-d3") ? " d3cell" : "") }); w.appendChild(el("label", { text: label })); w.appendChild(node); grid.appendChild(w); };
+        var cols = el("div", { class: "ak-death2" + (p.id === "me" ? " solo" : "") });
+        var col = function (title) { var c = el("div", { class: "ak-form" }); c.appendChild(el("div", { class: "ak-col-t", text: title })); cols.appendChild(c); return c; };
+        var cell = function (c, label, node) { var w = el("div"); w.appendChild(el("label", { text: label })); w.appendChild(node); c.appendChild(w); };
         if (p.id !== "me") {
-          cell("Дата смерти", dateInput(p.death, function (v) { p.death = v; changed(); draw(); }));
-          cell("Место смерти", input({ id: "tree-death_place", type: "text" }, p.death_place, function (v) { p.death_place = v; changed(); draw(); }));
+          var cl = col("Смерть");
+          cell(cl, "Дата смерти", dateInput(p.death, function (v) { p.death = v; changed(); draw(); }));
+          cell(cl, "Место смерти", input({ id: "tree-death_place", type: "text" }, p.death_place, function (v) { p.death_place = v; changed(); draw(); }));
+          cell(cl, "Обстоятельства смерти", input({ id: "tree-death_how", type: "textarea", one: true }, p.death_how, function (v) { p.death_how = v; changed(); }));
         }
+        var cr = col("Могила");
         var g = p.grave || {}, setG = function (k, v) { p.grave = p.grave || {}; p.grave[k] = v; changed(); draw(); };
-        cell("Где похоронен(а)", input({ id: "tree-grave-place", type: "text" }, g.place, function (v) { setG("place", v); }));
+        cell(cr, "Где похоронен(а)", input({ id: "tree-grave-place", type: "text" }, g.place, function (v) { setG("place", v); }));
         var st = el("select", {}, GRAVE_STATE.map(function (o) { return el("option", { value: o[0], text: o[1] }); })); st.value = g.state || ""; st.disabled = ro;
         st.onchange = function () { setG("state", st.value); };
-        cell("Состояние могилы", st);
-        cell("Когда последний раз приводили в порядок", dateInput(g.cleaned, function (v) { setG("cleaned", v); }));
-        cell("Комментарий про могилу", input({ id: "tree-grave-comment", type: "textarea" }, g.comment, function (v) { setG("comment", v); }), true);
-        box.appendChild(grid);
+        cell(cr, "Состояние могилы", st);
+        cell(cr, "Когда последний раз приводили в порядок", dateInput(g.cleaned, function (v) { setG("cleaned", v); }, true));
+        cell(cr, "Комментарий про могилу", input({ id: "tree-grave-comment", type: "textarea", one: true }, g.comment, function (v) { setG("comment", v); }));
+        box.appendChild(cols);
         return box;
       }
 
       function showPanel() {
         while (panel.firstChild) panel.removeChild(panel.firstChild);
         var p = sel && byId(sel);
-        if (!p) { panel.appendChild(el("div", { class: "ak-hint", text: ro ? "Нажмите на человека, чтобы посмотреть." : "Нажмите на человека, чтобы заполнить или добавить к нему родственника. Начните с себя: «+ мама», «+ папа»…" })); return; }
-        var head = el("div", { class: "ak-row" }, [el("b", { text: p.id === "me" ? cardText(p).name || "Вы" : relLabel(p) + (pname(p) ? " – " + pname(p) : "") }),
+        if (!p) { panel.appendChild(el("div", { class: "ak-hint", text: ro ? "Нажмите на человека, чтобы посмотреть." : "Нажмите на человека, чтобы заполнить его или добавить к нему родственника. Родители, бабушки и дедушки уже на древе – начните с них." })); return; }
+        // Заголовок (решение Никиты 2026-11-12): у родителей и предков – «кем приходится – имя» (родство понятно само), у остальных – только имя,
+        // их связь видна на древе и в «Родстве» ниже. Поля «Кем приходится» больше нет.
+        var anc = p.id !== "me" && ancestors("me")[p.id], isAnc = anc && !anc.step;
+        var head = el("div", { class: "ak-row" }, [el("b", { text: p.id === "me" ? cardText(p).name || "Вы" : isAnc ? relLabel(p) + (pname(p) ? " – " + pname(p) : "") : pname(p) || relLabel(p) }),
           el("button", { class: "ak-link", style: "font-size:14px", text: "Закрыть", onclick: function () { sel = null; draw(); showPanel(); } })]);
         panel.appendChild(head);
         if (p.id !== "me") {
           var grid = el("div", { class: "ak-form ak-tree-fields" });
-          [["rel", view ? "Кем приходится для " + (pname(byId(natId()) || {}) || "основной анкеты") : "Кем приходится", "text", REL_SUGGEST], ["first", "Имя", "text"], ["last", "Фамилия", "text"]].concat(hasMarriage(p.id) ? [["married", "Фамилия после замужества", "text"]] : []).concat([
+          [["first", "Имя", "text"], ["last", "Фамилия", "text"]].concat(hasMarriage(p.id) ? [["married", "Фамилия после замужества", "text"]] : []).concat([
            ["birth", "Дата рождения", "date3"], ["time", "Время рождения", "time"], ["place", "Место рождения", "text"]]).forEach(function (d) {
             var w = el("div", { class: "fld" + (d[2] === "date3" ? " d3cell" : "") }), inp;
             if (d[2] === "date3") inp = dateInput(p[d[0]], function (v) { p[d[0]] = v; changed(); draw(); });
@@ -1812,9 +1849,12 @@
         // Связь с древом: «этот человек – мать / брат / супруг(а) / … для <кого>».
         if (!ro && p.id !== "me") {
           var kSel = el("select", {}, KINDS.map(function (k) { return el("option", { value: k[0], text: k[1] }); }));
-          var xSel = el("select", {}, P.filter(function (o) { return o.id !== p.id; }).map(function (o) { return el("option", { value: o.id, text: nm(o).slice(0, 40) }); }));
-          panel.appendChild(el("div", { class: "ak-link-row" }, [el("span", { class: "ak-hint", text: "Связать: это" }), kSel, el("span", { class: "ak-hint", text: "для" }), xSel,
-            el("button", { type: "button", class: "ak-btn ghost", text: "Связать", onclick: function () { linkAs(kSel.value, p, byId(xSel.value)); } })]));
+          // Свёрнуто в ссылку (решение Никиты 2026-11-12): поля – только когда захотят связать; кто – не выбран заранее.
+          var xSel = el("select", {}, [el("option", { value: "", text: "— кого —" })].concat(P.filter(function (o) { return o.id !== p.id; }).map(function (o) { return el("option", { value: o.id, text: nm(o).slice(0, 40) }); })));
+          var lrow = el("div", { class: "ak-link-row", style: "display:none" }, [el("span", { class: "ak-hint", text: "Это" }), kSel, el("span", { class: "ak-hint", text: "для" }), xSel,
+            el("button", { type: "button", class: "ak-btn ghost", text: "Связать", onclick: function () { if (!xSel.value) { xSel.focus(); return; } linkAs(kSel.value, p, byId(xSel.value)); } })]);
+          var lopen = el("button", { type: "button", class: "ak-link", style: "font-size:14px", text: "Связать с кем-то ещё", onclick: function () { lopen.style.display = "none"; lrow.style.display = ""; } });
+          panel.appendChild(el("div", { class: "ak-link-row" }, [lopen])); panel.appendChild(lrow);
         }
         var ops = el("div", { class: "ak-tree-ops" });
         if (p.id !== "me") {
