@@ -335,6 +335,7 @@
     .ak-tree-svg .ln.step { stroke-dasharray: 5 4; }
     .ak-tree-svg .ln.partner { stroke-dasharray: 2 3; }
     .ak-tree-svg .ln.bold { stroke: var(--accent); stroke-width: 4; stroke-dasharray: none; }
+    .ak-tree-svg .ln.hov { stroke: #3a332b; stroke-width: 3; stroke-dasharray: none; opacity: 1; }
     .ak-gen span { background: #fffb; padding: 0 6px; border-radius: 4px; position: relative; z-index: 1; }
     .ak-gen { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; text-align: center; margin: 6px 0 4px; position: relative; }
     .ak-tree-row { display: flex; justify-content: center; gap: 40px; padding: 30px 8px 22px; position: relative; }
@@ -1263,6 +1264,29 @@
           if (seq !== drawSeq || !document.body.contains(wrap)) { next.remove(); return; }
           var box2 = {}, bold = boldEdges(), NS = "http://www.w3.org/2000/svg";
           res.children.forEach(function (n) { box2[n.id] = n; if (n.id.indexOf("n:") === 0) { var c = cards[n.id.slice(2)]; c.style.left = n.x + "px"; c.style.top = n.y + "px"; } });
+          // Единственный ребёнок пары – под значком брака, если влезает между соседями по ряду и никого не сдвигает (решение Никиты 2026-11-12).
+          // Ряды сверху вниз: сдвиг ребёнка меняет середину его собственной пары. Не трогаем тех, у кого линии к детям или родителю ведёт ELK.
+          var kidsOf = {}, elkKid = {};
+          Object.keys(info).forEach(function (id) {
+            var m = info[id]; if (m.kind !== "child") return;
+            if (m.src.indexOf("n:") === 0) { elkKid[m.c.id] = true; elkKid[m.src.slice(2)] = true; } else (kidsOf[m.src] = kidsOf[m.src] || []).push(m.c.id);
+          });
+          var rowsX = {}; vis.forEach(function (p) { if (box2["n:" + p.id]) (rowsX[gen[p.id]] = rowsX[gen[p.id]] || []).push(p.id); });
+          var ctr = function (id) { var b = box2["n:" + id]; return b.x + b.width / 2; };
+          Object.keys(rowsX).map(Number).sort(function (a, b) { return b - a; }).forEach(function (g) {
+            Object.keys(kidsOf).forEach(function (k) {
+              var ks = kidsOf[k], id = ks[0]; if (ks.length !== 1 || gen[id] !== g || elkKid[id] || !box2[k]) return;
+              if (!box2["n:" + upart[k][0]] || !box2["n:" + upart[k][1]]) return;
+              var b = box2["n:" + id], row = rowsX[g].slice().sort(function (x, y) { return box2["n:" + x].x - box2["n:" + y].x; }), i = row.indexOf(id);
+              var nx = Math.round((ctr(upart[k][0]) + ctr(upart[k][1])) / 2 - b.width / 2);
+              var l0 = i > 0 ? box2["n:" + row[i - 1]] : null, r0 = i < row.length - 1 ? box2["n:" + row[i + 1]] : null;
+              if ((l0 && nx < l0.x + l0.width + 20) || (r0 && nx + b.width > r0.x - 20) || nx < 12 || nx + b.width > res.width - 12) return;
+              b.x = nx; cards[id].style.left = nx + "px";
+            });
+          });
+          // Наведение на карточку: линии к родителям, от них к их родителям и т.д. – жирные (решение Никиты 2026-11-12).
+          var lineage = {}, partnerD = {};
+          var addLin = function (id, ds, ps) { (lineage[id] = lineage[id] || []).push({ ds: ds, ps: ps }); };
           var W = res.width, H = res.height;
           // Не связаны с древом – рядом внизу.
           var lx = 12, ly = H + 26;
@@ -1293,7 +1317,8 @@
               var cy = q.n.y + q.n.height / 2, cx = q.n.x + q.n.width / 2, u = q.k.indexOf("u:") === 0 ? U.filter(function (o) { return "u:" + o.id === q.k; })[0] : null;
               var a = upart[q.k][0], b = upart[q.k][1];
               var cls = "ln" + (u && former(u) ? " former" : "") + (bold[a + "|" + b] || bold[b + "|" + a] ? " bold" : "") + (isExt(a) || isExt(b) ? " ext" : "");
-              q.ends.forEach(function (e) { path("M" + e[0] + " " + e[1] + " V" + cy + " H" + cx, cls); });
+              partnerD[q.k] = q.ends.map(function (e) { return "M" + e[0] + " " + e[1] + " V" + cy + " H" + cx; });
+              partnerD[q.k].forEach(function (d) { path(d, cls); });
             });
           });
           // Дети пары: от значка брака – один ствол вниз, горизонталь и отводы к каждому ребёнку (решение Никиты 2026-11-12).
@@ -1329,6 +1354,7 @@
             g2.kids.forEach(function (q) {
               var m = q.m, cls = (m.c.adopted ? "ln step" : "ln") + (isExt(m.c.id) ? " ext" : "");
               path("M" + q.x + " " + g2.busY + " V" + q.t, cls);
+              addLin(m.c.id, ["M" + g2.x + " " + g2.y + " V" + g2.busY + " H" + q.x + " V" + q.t].concat(partnerD[m.src] || []), m.ps);
               if (m.ps.some(function (pid) { return bold[m.c.id + "|" + pid]; })) path("M" + g2.x + " " + g2.y + " V" + g2.busY + " H" + q.x + " V" + q.t, "ln bold");
             });
           });
@@ -1339,9 +1365,10 @@
               (sct.bendPoints || []).forEach(function (b) { d += " L" + b.x + " " + b.y; });
               d += " L" + sct.endPoint.x + " " + sct.endPoint.y;
               if (m.kind === "partner") path(d, "ln" + (m.u && former(m.u) ? " former" : "") + (bold[m.a + "|" + m.b] ? " bold" : "") + (isExt(m.a) || isExt(m.b) ? " ext" : ""));
-              else path(d, (m.c.adopted ? "ln step" : "ln") + (m.ps.some(function (pid) { return bold[m.c.id + "|" + pid]; }) ? " bold" : "") + (isExt(m.c.id) ? " ext" : ""));
+              else { path(d, (m.c.adopted ? "ln step" : "ln") + (m.ps.some(function (pid) { return bold[m.c.id + "|" + pid]; }) ? " bold" : "") + (isExt(m.c.id) ? " ext" : "")); addLin(m.c.id, [d], m.ps); }
             });
           });
+          var hovG = document.createElementNS(NS, "g"); svg.appendChild(hovG);   // слой подсветки – над линиями, под значками браков
           // Значок брака (развод – перечёркнут) и годы; пара родителей без брака – точка.
           Object.keys(box2).forEach(function (k) {
             var n = box2[k], cx = n.x + n.width / 2, cy = n.y + n.height / 2;
@@ -1380,6 +1407,15 @@
           var top = {}; vis.forEach(function (p) { var b = box2["n:" + p.id]; if (b) top[gen[p.id]] = Math.min(top[gen[p.id]] == null ? 1e9 : top[gen[p.id]], b.y); });
           Object.keys(top).forEach(function (g) { var lb = el("div", { class: "ak-genl", text: GEN_NAME[g] || (g > 0 ? "Предки" : "Потомки") }); lb.style.top = (top[g] - 16) + "px"; next.appendChild(lb); });
           next.insertBefore(svg, next.firstChild);
+          var linOf = function (id, out, seen) { if (seen[id]) return; seen[id] = true; (lineage[id] || []).forEach(function (r) { out.push.apply(out, r.ds); r.ps.forEach(function (p) { linOf(p, out, seen); }); }); };
+          vis.forEach(function (p) {
+            var c = cards[p.id]; if (!c) return;
+            c.addEventListener("mouseenter", function () {
+              var ds = []; linOf(p.id, ds, {}); while (hovG.firstChild) hovG.removeChild(hovG.firstChild);
+              ds.forEach(function (d) { var e = document.createElementNS(NS, "path"); e.setAttribute("d", d); e.setAttribute("class", "ln hov"); hovG.appendChild(e); });
+            });
+            c.addEventListener("mouseleave", function () { while (hovG.firstChild) hovG.removeChild(hovG.firstChild); });
+          });
           // Готово – переносим в видимый слой.
           while (stage.firstChild) stage.removeChild(stage.firstChild);
           stage.className = "ak-tree-stage elk"; stage.style.width = W + "px"; stage.style.height = H + "px";
