@@ -1772,6 +1772,35 @@
         return box;
       }
 
+      // Беременность матери и роды (решение Никиты 2026-11-12): у натива, его ряда и всех ниже – поля сразу (две колонки, растут по тексту);
+      // у тех, кто выше, – ссылки «+ …», поле появляется по нажатию (или если уже заполнено).
+      var BIRTH_F = [["pregnancy", "Как проходила беременность матери"], ["birth_how", "Как прошли роды"]];
+      function birthBlock(p) {
+        var natv = view ? natId() : "me", open = false;
+        if (natv && lastGen[p.id] != null && lastGen[natv] != null) open = lastGen[p.id] <= lastGen[natv];
+        else if (natv) {
+          if (p.id === natv) open = true;
+          var dq = [natv], seenD = {}; while (dq.length && !open) { var dc = dq.shift(); if (seenD[dc]) continue; seenD[dc] = true; childrenOf(dc).forEach(function (k) { if (k.id === p.id) open = true; dq.push(k.id); }); }
+        }
+        var kb = el("div", { class: "ak-death2" }), links = el("div", { class: "ak-link-row" }), any = false;
+        BIRTH_F.forEach(function (d) {
+          var c = el("div", { class: "ak-form" }), w = el("div");
+          w.appendChild(el("label", { text: d[1] }));
+          w.appendChild(input({ id: "tree-" + d[0], type: "textarea", one: true }, p[d[0]], function (v) { p[d[0]] = v; changed(); }));
+          c.appendChild(w); kb.appendChild(c);
+          if (!open && !String(p[d[0]] || "").trim()) {
+            c.style.display = "none";
+            if (!ro) {
+              var b = el("button", { type: "button", class: "ak-link", style: "font-size:14px;margin-right:14px", text: "+ " + d[1].charAt(0).toLowerCase() + d[1].slice(1),
+                onclick: function () { b.remove(); c.style.display = ""; kb.style.display = ""; var t = c.querySelector("textarea"); grow(t); t.focus(); } });
+              links.appendChild(b);
+            }
+          } else any = true;
+        });
+        if (!any) kb.style.display = "none";
+        return el("div", {}, [kb, links.childNodes.length ? links : null]);
+      }
+
       function showPanel() {
         while (panel.firstChild) panel.removeChild(panel.firstChild);
         var p = sel && byId(sel);
@@ -1798,21 +1827,7 @@
           lw.appendChild(input({ id: "tree-life", type: "textarea" }, p.life, function (v) { p.life = v; changed(); }));
           grid.appendChild(lw);
           panel.appendChild(grid);
-          // Все, кто ниже натива на древе (дети, внуки, дети братьев и сестёр, бывших супругов…): беременность и роды –
-          // две колонки, поля растут по тексту (решение Никиты 2026-11-12). Не на древе сейчас (основной вид) – потомки натива.
-          var natv = view ? natId() : "me", below = false;
-          if (natv && lastGen[p.id] != null && lastGen[natv] != null) below = lastGen[p.id] < lastGen[natv];
-          else if (natv) { var dq = [natv], seenD = {}; while (dq.length && !below) { var dc = dq.shift(); if (seenD[dc]) continue; seenD[dc] = true; childrenOf(dc).forEach(function (k) { if (k.id === p.id) below = true; dq.push(k.id); }); } }
-          if (below) {
-            var kb = el("div", { class: "ak-death2" });
-            [["pregnancy", "Обстоятельства беременности"], ["birth_how", "Обстоятельства родов"]].forEach(function (d) {
-              var c = el("div", { class: "ak-form" }), w = el("div");
-              w.appendChild(el("label", { text: d[1] }));
-              w.appendChild(input({ id: "tree-" + d[0], type: "textarea", one: true }, p[d[0]], function (v) { p[d[0]] = v; changed(); }));
-              c.appendChild(w); kb.appendChild(c);
-            });
-            panel.appendChild(kb);
-          }
+          panel.appendChild(birthBlock(p));
           // Брат / сестра: какие родители общие (сводные – не все).
           var ref = p.same ? byId(p.same) : p.sib ? byId(p.sib) : null;
           if (ref && parentsOf(ref).length) {
@@ -1845,6 +1860,7 @@
           });
           panel.appendChild(mg);
           panel.appendChild(el("div", { class: "ak-hint", text: "Это те же поля, что в начале анкеты, – меняются и там." }));
+          panel.appendChild(birthBlock(p));
         }
         panel.appendChild(deathBlock(p));
         panel.appendChild(unionsBlock(p));
