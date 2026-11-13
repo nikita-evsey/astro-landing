@@ -255,13 +255,36 @@
 </style>
 </head>
 <body>
+<header class="adm"><div class="in">
+  <a class="adm-brand" href="/admin/">Админка</a>
+  <nav class="adm-nav"><a href="/admin/#summary">Сводка</a><a href="/admin/#orders">Заказы</a><a href="/admin/#promos">Промокоды</a><a href="/admin/ankety/">Анкеты</a></nav>
+  <span class="adm-side"><a href="/">Сайт</a><a href="/login/?logout=1&amp;back=/login/">Выйти</a></span>
+</div></header>
+<style>
+  header.adm { background: #23262d; color: #f2ece1; position: sticky; top: 0; z-index: 5; }
+  header.adm .in { max-width: 1040px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; gap: 18px; min-height: 48px; flex-wrap: wrap; }
+  header.adm a { color: #f2ece1; text-decoration: none; font-size: 15px; }
+  header.adm .adm-brand { font-family: "Prata", Georgia, serif; font-size: 18px; }
+  header.adm .adm-nav { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+  header.adm .adm-nav a { padding: 6px 10px; border-radius: 6px; white-space: nowrap; opacity: .8; }
+  header.adm .adm-nav a:hover { opacity: 1; background: rgba(255,255,255,.08); }
+  header.adm .adm-nav a[aria-current] { opacity: 1; background: rgba(255,255,255,.16); }
+  header.adm .adm-side { display: flex; gap: 14px; opacity: .75; font-size: 14px; }
+  @media (max-width: 640px) { header.adm .in { gap: 6px 12px; padding: 6px 12px; } header.adm .adm-nav { order: 3; flex-basis: 100%; } }
+</style>
+<script>
+  (function () {
+    function mark() {
+      var here = location.pathname + (location.pathname === "/admin/" ? (location.hash || "#summary") : "");
+      document.querySelectorAll("header.adm .adm-nav a").forEach(function (a) { if (a.getAttribute("href") === here) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    }
+    mark(); window.addEventListener("hashchange", mark);
+  })();
+</script>
 <main>
 
   <style>
-    main { padding-top: 16px; }
-    .ad-tabs { display: flex; gap: 6px; margin: 0 0 18px; position: sticky; top: 0; background: var(--paper); padding: 8px 0; z-index: 2; }
-    .ad-tabs button { flex: 1; font: inherit; font-size: 16px; padding: 9px 6px; border: 1px solid var(--rule); border-radius: 8px; background: #fff; color: var(--ink); cursor: pointer; }
-    .ad-tabs button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    main { padding-top: 24px; max-width: 760px; }
     .ad-card { background: var(--box); border-radius: 10px; padding: 14px 16px; margin: 10px 0; font-size: 16px; line-height: 1.45; }
     .ad-card.off { opacity: .55; }
     .ad-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -283,6 +306,7 @@
     .ad-msg { margin: 12px 0; font-size: 15px; }
     .ad-msg.err { color: #9b1c1c; }
     .ad-link { word-break: break-all; font-size: 14px; }
+    h1.ad-title { font-size: 30px; margin: 0 0 14px; }
     h2.ad-h { font-size: 22px; margin: 22px 0 6px; }
   </style>
 
@@ -295,7 +319,11 @@
     var tgApp = window.Telegram && window.Telegram.WebApp;
     var initData = tgApp && tgApp.initData || "";
     var app = document.getElementById("ad-app");
-    var tab = "promos", products = [];
+    // Вход: в Telegram – initData мини-приложения; в браузере – сессия из /login/ (та же, что для анкет).
+    var sess = ""; try { sess = localStorage.getItem("astro_admin_s") || ""; } catch (e) {}
+    var TABS = { summary: "Сводка", orders: "Заказы", promos: "Промокоды" };
+    function hashTab() { var h = location.hash.slice(1); return TABS[h] ? h : "summary"; }
+    var tab = hashTab(), products = [];
     if (tgApp) { try { tgApp.ready(); tgApp.expand(); } catch (e) {} }
 
     function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -303,7 +331,7 @@
     function dt(ms) { return ms ? new Date(ms).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Minsk" }) : ""; }
     function day(s) { return s ? new Date(String(s).replace(" ", "T") + "Z").toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) : ""; }
     function api(path, body) {
-      return fetch(API + path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", "X-Tg-Init-Data": initData }, body: body ? JSON.stringify(body) : undefined })
+      return fetch(API + path, { method: body ? "POST" : "GET", headers: { "Content-Type": "application/json", "X-Tg-Init-Data": initData, "X-Admin-Session": sess }, body: body ? JSON.stringify(body) : undefined })
         .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ("Ошибка " + r.status)); return j; }); });
     }
     function copy(text, btn) {
@@ -313,19 +341,16 @@
     }
     function linkOf(code) { return "https://t.me/" + BOT + "?start=promo_" + code; }
 
-    if (!initData) {
-      app.innerHTML = '<h1>Админка</h1><p>Открывается только из бота: напишите <b>/admin</b> в @' + BOT + ' и нажмите «Открыть админку».</p>';
-      return;
+    function loginMsg() {
+      app.innerHTML = '<h1>Админка</h1><p>Войдите через Telegram: <a href="/login/?back=/admin/">Admin Login</a>. Или откройте из бота: <b>/admin</b> в @' + BOT + '.</p>';
     }
+    if (!initData && !sess) { loginMsg(); return; }
 
     function shell(inner) {
-      app.innerHTML = '<div class="ad-tabs">' +
-        [["promos", "Промокоды"], ["orders", "Заказы"], ["summary", "Сводка"]].map(function (t) {
-          return '<button data-tab="' + t[0] + '" aria-pressed="' + (tab === t[0]) + '">' + t[1] + '</button>';
-        }).join("") + '</div><div id="ad-body">' + inner + '</div>';
-      app.querySelectorAll("[data-tab]").forEach(function (b) { b.onclick = function () { tab = b.dataset.tab; render(); }; });
+      app.innerHTML = '<h1 class="ad-title">' + TABS[tab] + '</h1><div id="ad-body">' + inner + '</div>';
     }
-    function fail(e) { shell('<p class="ad-msg err">' + esc(e.message) + '</p>'); }
+    window.addEventListener("hashchange", function () { tab = hashTab(); render(); });
+    function fail(e) { if (/Нет доступа/.test(e.message) && !initData) return loginMsg(); shell('<p class="ad-msg err">' + esc(e.message) + '</p>'); }
 
     function render() {
       shell('<p class="ad-muted">Загружаю…</p>');
@@ -430,7 +455,7 @@
           '<div>' + esc(who) + (o.email ? ' · ' + esc(o.email) : "") + '</div>' +
           '<div>' + money(o.amount) + (o.promo_code ? ' <span class="ad-muted">(промокод ' + esc(o.promo_code) + ', полная ' + money(o.full_amount) + ')</span>' : "") + (o.extra_kids ? ' · детей ' + (o.extra_kids + 1) : "") + '</div>' +
           (o.slot_start ? '<div>Звонок: ' + dt(o.slot_start) + (o.slot2_start ? '; второй: ' + dt(o.slot2_start) : "") + ' (Минск)</div>' : "") +
-          (o.status === "paid" && o.ank_need ? '<div>Анкеты: ' + o.ank_sent + ' из ' + o.ank_need + '</div>' : "") +
+          (o.status === "paid" && o.ank_need ? '<div>Анкеты: ' + o.ank_sent + ' из ' + o.ank_need + (o.anketa_token ? ' · <a href="/anketa/?t=' + encodeURIComponent(o.anketa_token) + '">открыть</a>' : "") + '</div>' : "") +
           '<div class="ad-muted">создан ' + day(o.created_at) + (o.paid_at ? ', оплачен ' + day(o.paid_at) : "") + test + '</div></div>';
       }).join("");
       document.getElementById("ad-body").innerHTML = rows || '<p class="ad-muted">Заказов пока нет.</p>';

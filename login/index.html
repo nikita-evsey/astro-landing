@@ -277,8 +277,8 @@
   (function () {
     var API = "https://astrotherapiest-bot.nik-yevsey.workers.dev/anketa/api/login";
     var q = new URLSearchParams(location.search);
-    var back = q.get("back") || "/";
-    if (back.charAt(0) !== "/" || back.charAt(1) === "/") back = "/";   // только свои страницы
+    var back = q.get("back") || "/admin/";   // по умолчанию – в админку (меню служебных страниц)
+    if (back.charAt(0) !== "/" || back.charAt(1) === "/") back = "/admin/";   // только свои страницы
     var msg = document.getElementById("lg-msg");
     function sess(v) { try { if (v === undefined) return localStorage.getItem("astro_admin_s") || ""; if (v) localStorage.setItem("astro_admin_s", v); else localStorage.removeItem("astro_admin_s"); } catch (e) { return ""; } }
 
@@ -299,7 +299,7 @@
     if (sess()) {
       msg.innerHTML = "";
       msg.appendChild(document.createTextNode("Вы уже вошли на этом устройстве. "));
-      var a = document.createElement("a"); a.href = back; a.textContent = "Вернуться"; msg.appendChild(a);
+      var a = document.createElement("a"); a.href = back; a.textContent = back === "/admin/" ? "В админку" : "Вернуться"; msg.appendChild(a);
       msg.appendChild(document.createTextNode(" · "));
       var o = document.createElement("a"); o.href = "/login/?logout=1&back=" + encodeURIComponent(back); o.textContent = "Выйти"; msg.appendChild(o);
       return;
@@ -329,7 +329,7 @@
     <a href="/oferta/">Договор-оферта</a>
     <a href="/privacy/">Политика конфиденциальности</a>
     <a href="#cookie" data-cookie-settings>Настройки cookie</a>
-    <a href="/login/" onclick="this.href='/login/?back='+encodeURIComponent(location.pathname+location.search+location.hash)">Admin Login</a>
+    <a href="/login/" onclick="if(location.pathname.indexOf('/anketa/')===0)this.href='/login/?back='+encodeURIComponent(location.pathname+location.search+location.hash)">Admin Login</a>
     <span>I.E. Nikita Evsey · ID 305518329 · Tbilisi, Georgia</span>
     <a href="mailto:hello@astrotherapiest.com">hello@astrotherapiest.com</a>
   </div>

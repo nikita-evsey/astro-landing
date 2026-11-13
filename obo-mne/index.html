@@ -360,7 +360,7 @@
     <a href="/oferta/">Договор-оферта</a>
     <a href="/privacy/">Политика конфиденциальности</a>
     <a href="#cookie" data-cookie-settings>Настройки cookie</a>
-    <a href="/login/" onclick="this.href='/login/?back='+encodeURIComponent(location.pathname+location.search+location.hash)">Admin Login</a>
+    <a href="/login/" onclick="if(location.pathname.indexOf('/anketa/')===0)this.href='/login/?back='+encodeURIComponent(location.pathname+location.search+location.hash)">Admin Login</a>
     <span>I.E. Nikita Evsey · ID 305518329 · Tbilisi, Georgia</span>
     <a href="mailto:hello@astrotherapiest.com">hello@astrotherapiest.com</a>
   </div>
