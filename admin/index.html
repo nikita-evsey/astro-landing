@@ -284,7 +284,8 @@
 <main>
 
   <style>
-    main { padding-top: 24px; max-width: 760px; }
+    main { padding-top: 24px; max-width: 1200px; }
+    #ad-body > .ad-grid, #ad-body > .ad-card { max-width: 760px; }
     .ad-card { background: var(--box); border-radius: 10px; padding: 14px 16px; margin: 10px 0; font-size: 16px; line-height: 1.45; }
     .ad-card.off { opacity: .55; }
     .ad-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -295,7 +296,43 @@
     .ad-badge.paid { background: #dbe8d5; color: #24502a; }
     .ad-badge.new, .ad-badge.failed { background: #fbe7c6; color: #6b4e00; }
     .ad-badge.refunded, .ad-badge.cancelled, .ad-badge.chargeback { background: #f3d6d6; color: #7a1f1f; }
-    .ad-btn { font: inherit; font-size: 16px; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: var(--accent); color: #fff; }
+    /* Кнопки в админке – синие (бордовый – только для CTA на сайте, решение Никиты 2026-11-14). */
+    .ad-btn { font: inherit; font-size: 16px; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; background: #2f5d8a; color: #fff; }
+    .ad-btn:not(.ghost):hover { background: #264d73; }
+    .ad-btn.ghost:hover { border-color: #2f5d8a; color: #2f5d8a; }
+    main a { color: #2f5d8a; }
+    details.ad-new { margin: 0 0 14px; }
+    details.ad-new > summary { display: inline-block; list-style: none; font-size: 15px; padding: 8px 14px; }
+    details.ad-new > summary::-webkit-details-marker { display: none; }
+    details.ad-new[open] > summary { background: #264d73; }
+    details.ad-new .ad-card { max-width: 620px; }
+    .ad-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 10px; }
+    .ad-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ad-chips button { font: inherit; font-size: 14px; padding: 6px 11px; border: 1px solid var(--rule); border-radius: 8px; background: #fff; color: var(--ink); cursor: pointer; }
+    .ad-chips button[aria-pressed="true"] { background: #2f5d8a; border-color: #2f5d8a; color: #fff; }
+    .ad-chips b { font-weight: 600; opacity: .7; }
+    .ad-q { font: inherit; font-size: 15px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 8px; background: #fff; color: var(--ink); flex: 1; min-width: 160px; }
+    .ad-sel { flex: 0 0 auto; min-width: 0; }
+    .pc-head, .pc-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) 96px 110px 118px auto; gap: 12px; align-items: center; }
+    .pc-head { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 4px 12px; }
+    .pc-row { background: #fff; border: 1px solid var(--rule); border-radius: 8px; padding: 8px 12px; margin: 5px 0; font-size: 15px; line-height: 1.35; }
+    .pc-row .ad-muted { font-size: 13px; }
+    .pc-row.off, .pc-row.expired { opacity: .55; }
+    .pc-row.used { background: #fbfaf7; }
+    .pc-code b { font-family: "Geist Mono", ui-monospace, monospace; font-size: 15px; word-break: break-all; }
+    .pc-st { display: inline-block; font-size: 11px; padding: 0 7px; border-radius: 99px; background: #e4ded2; vertical-align: 1px; }
+    .pc-st.live { background: #dbe8d5; color: #24502a; }
+    .pc-st.used { background: #dfe7f0; color: #264d73; }
+    .pc-act { display: flex; gap: 6px; justify-content: flex-end; white-space: nowrap; }
+    .pc-act .ad-btn { padding: 4px 9px; font-size: 13px; }
+    .pc-k { display: none; color: var(--muted); }
+    @media (max-width: 900px) {
+      .pc-head { display: none; }
+      .pc-row { grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+      .pc-row > :nth-child(2), .pc-act { grid-column: 1 / -1; }
+      .pc-act { justify-content: flex-start; }
+      .pc-k { display: inline; }
+    }
     .ad-btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--rule); padding: 6px 12px; font-size: 14px; }
     .ad-form label { display: block; font-size: 15px; font-weight: 600; margin: 14px 0 6px; }
     .ad-form input[type=text], .ad-form input[type=number], .ad-form input[type=date] { width: 100%; font: inherit; font-size: 17px; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: #fff; color: var(--ink); }
@@ -366,7 +403,7 @@
 
     function renderPromos(d) {
       products = d.products;
-      var form = '<div class="ad-card ad-form"><b>Новый промокод</b>' +
+      var form = '<details class="ad-new"' + (formOpen ? " open" : "") + '><summary class="ad-btn">+ Новый промокод</summary><div class="ad-card ad-form">' +
         '<label for="pc-code">Код (латиница, цифры, дефис)</label><div class="inline"><input type="text" id="pc-code" autocomplete="off" autocapitalize="characters" placeholder="MAMA-20"><button class="ad-btn ghost" type="button" id="pc-gen">Придумать</button></div>' +
         '<label>Тип</label><label class="ad-check"><input type="radio" name="pc-kind" value="percent" checked> Скидка в %</label><label class="ad-check"><input type="radio" name="pc-kind" value="fixed"> Фиксированная цена, $</label><label class="ad-check"><input type="radio" name="pc-kind" value="free"> Pro bono – бесплатно, без оплаты</label>' +
         '<div id="pc-value-wrap"><label for="pc-value" id="pc-value-l">Скидка, %</label><input type="number" id="pc-value" min="1" step="1" inputmode="decimal"></div>' +
@@ -379,20 +416,21 @@
         }).join("") + '</div>' +
         '<label for="pc-uses">Сколько оплат</label><div class="inline"><input type="number" id="pc-uses" min="1" step="1" value="1"><label class="ad-check" style="white-space:nowrap"><input type="checkbox" id="pc-unl"> без ограничения</label></div>' +
         '<label for="pc-until">Действует до (включительно, необязательно)</label><input type="date" id="pc-until">' +
-        '<p><button class="ad-btn" id="pc-save" type="button">Создать</button></p><div id="pc-msg"></div></div>';
+        '<p><button class="ad-btn" id="pc-save" type="button">Создать</button></p><div id="pc-msg"></div></div></details>';
 
-      var list = d.promos.length ? d.promos.map(function (p) {
-        return '<div class="ad-card' + (p.active ? "" : " off") + '"><div class="ad-row"><b>' + esc(p.code) + '</b><span>' + promoLabel(p) + '</span></div>' +
-          '<div class="ad-muted">' + (p.products ? p.products.split(",").map(titleOf).map(esc).join("; ") : "Все консультации") +
-          ' · ' + (p.urgent_ok ? "обычная и срочная" : "только обычная") + (p.kind === "fixed" ? (p.kids_included ? ", все дети в цене" : ", доп. дети по $149") : p.kind === "free" ? ", без оплаты" : "") +
-          ' · оплат ' + p.used + (p.max_uses != null ? " из " + p.max_uses : "") + (p.expires_at ? " · до " + esc(p.expires_at) : "") + (p.active ? "" : " · выключен") + '</div>' +
-          '<div>Оплачено: ' + p.paid_n + ' на ' + money(p.paid_sum) + ', скидка ' + money(p.discount_sum) + '</div>' +
-          '<div class="ad-row" style="margin-top:8px"><button class="ad-btn ghost" data-copy="' + esc(p.code) + '">Скопировать ссылку</button>' +
-          '<span><button class="ad-btn ghost" data-toggle="' + esc(p.code) + '" data-active="' + (p.active ? 0 : 1) + '">' + (p.active ? "Выключить" : "Включить") + '</button>' +
-          (p.orders_n || p.used ? "" : ' <button class="ad-btn ghost" data-del="' + esc(p.code) + '">Удалить</button>') + '</span></div></div>';
-      }).join("") : '<p class="ad-muted">Кодов пока нет.</p>';
-
-      document.getElementById("ad-body").innerHTML = form + '<h2 class="ad-h">Все коды</h2>' + list;
+      allPromos = d.promos;
+      var cnt = {}; PF.forEach(function (f) { cnt[f[0]] = d.promos.filter(function (p) { return f[2](p); }).length; });
+      var controls = '<div class="ad-ctl"><div class="ad-chips">' + PF.map(function (f) {
+          return '<button type="button" data-pf="' + f[0] + '" aria-pressed="' + (pf === f[0]) + '">' + f[1] + ' <b>' + cnt[f[0]] + '</b></button>';
+        }).join("") + '</div>' +
+        '<input type="search" id="pc-q" class="ad-q" placeholder="Поиск: код, консультация" value="' + esc(pq) + '">' +
+        '<select id="pc-sort" class="ad-q ad-sel">' + PS.map(function (o) { return '<option value="' + o[0] + '"' + (ps === o[0] ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") + '</select></div>';
+      document.getElementById("ad-body").innerHTML = form + controls + '<div class="pc-head"><span>Код</span><span>Условия</span><span>Оплаты</span><span>Выручка / скидка</span><span>Срок, создан</span><span></span></div><div id="pc-list"></div>';
+      app.querySelector(".ad-new").ontoggle = function () { formOpen = this.open; };
+      app.querySelectorAll("[data-pf]").forEach(function (b) { b.onclick = function () { pf = b.dataset.pf; app.querySelectorAll("[data-pf]").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); }); drawPromos(); }; });
+      document.getElementById("pc-q").oninput = function () { pq = this.value.trim().toLowerCase(); drawPromos(); };
+      document.getElementById("pc-sort").onchange = function () { ps = this.value; drawPromos(); };
+      drawPromos();
 
       var $ = function (id) { return document.getElementById(id); };
       $("pc-gen").onclick = function () { $("pc-code").value = genCode(); };
@@ -428,8 +466,46 @@
           api("/promos").then(function (d2) { var keep = msg.innerHTML; renderPromos(d2); var m = $("pc-msg"); m.innerHTML = keep; $("pc-copy").onclick = function () { copy(link, this); }; });
         }, function (e) { msg.className = "ad-msg err"; msg.textContent = e.message; }).then(function () { btn.disabled = false; });
       };
-      app.querySelectorAll("[data-copy]").forEach(function (b) { b.onclick = function () { copy(linkOf(b.dataset.copy), b); }; });
-      app.querySelectorAll("[data-del]").forEach(function (b) { b.onclick = function () {
+    }
+
+    // Состояние кода: действует / исчерпан / истёк / выключен.
+    function promoState(p) {
+      if (!p.active) return "off";
+      if (p.expires_at && new Date().toISOString().slice(0, 10) > p.expires_at) return "expired";
+      if (p.max_uses != null && p.used >= p.max_uses) return "used";
+      return "live";
+    }
+    var STATE_TXT = { live: "действует", used: "исчерпан", expired: "истёк", off: "выключен" };
+    var PF = [["live", "Действуют", function (p) { return promoState(p) === "live"; }], ["used", "Исчерпаны", function (p) { return promoState(p) === "used"; }],
+      ["off", "Выключены / истекли", function (p) { var st = promoState(p); return st === "off" || st === "expired"; }], ["all", "Все", function () { return true; }]];
+    var PS = [["new", "Сначала новые"], ["paid", "По числу оплат"], ["sum", "По выручке"], ["disc", "По скидке"], ["code", "По коду (А–Я)"]];
+    var allPromos = [], pf = "live", pq = "", ps = "new", formOpen = false;
+    function drawPromos() {
+      var f = PF.filter(function (x) { return x[0] === pf; })[0];
+      var rows = allPromos.filter(f[2]).filter(function (p) {
+        if (!pq) return true;
+        return (p.code + " " + promoLabel(p) + " " + (p.products ? p.products.split(",").map(titleOf).join(" ") : "все консультации")).toLowerCase().indexOf(pq) >= 0;
+      });
+      var by = { "new": function (a, b) { return String(b.created_at).localeCompare(String(a.created_at)); }, paid: function (a, b) { return b.paid_n - a.paid_n; },
+        sum: function (a, b) { return b.paid_sum - a.paid_sum; }, disc: function (a, b) { return b.discount_sum - a.discount_sum; }, code: function (a, b) { return a.code.localeCompare(b.code); } }[ps];
+      rows.sort(by);
+      var box = document.getElementById("pc-list");
+      box.innerHTML = rows.length ? rows.map(function (p) {
+        var st = promoState(p);
+        var terms = (p.products ? p.products.split(",").map(titleOf).map(esc).join(", ") : "все консультации") + " · " + (p.urgent_ok ? "и срочная" : "только обычная") +
+          (p.kind === "fixed" ? (p.kids_included ? " · все дети в цене" : " · доп. дети по $149") : "");
+        return '<div class="pc-row ' + st + '">' +
+          '<div class="pc-code"><b>' + esc(p.code) + '</b> <span class="pc-st ' + st + '">' + STATE_TXT[st] + '</span></div>' +
+          '<div><b>' + promoLabel(p) + '</b><div class="ad-muted">' + terms + '</div></div>' +
+          '<div><span class="pc-k">Оплаты </span>' + p.used + (p.max_uses != null ? " из " + p.max_uses : " · без лимита") + (p.orders_n > p.paid_n ? '<div class="ad-muted">счетов ' + p.orders_n + '</div>' : "") + '</div>' +
+          '<div><span class="pc-k">Выручка </span>' + money(p.paid_sum) + '<div class="ad-muted">скидка ' + money(p.discount_sum) + '</div></div>' +
+          '<div class="ad-muted">' + (p.expires_at ? "до " + esc(p.expires_at) : "без срока") + '<br>создан ' + day(p.created_at) + '</div>' +
+          '<div class="pc-act"><button class="ad-btn ghost" data-copy="' + esc(p.code) + '" title="Скопировать ссылку для человека">Ссылка</button>' +
+          '<button class="ad-btn ghost" data-toggle="' + esc(p.code) + '" data-active="' + (p.active ? 0 : 1) + '">' + (p.active ? "Выключить" : "Включить") + '</button>' +
+          (p.orders_n || p.used ? "" : '<button class="ad-btn ghost" data-del="' + esc(p.code) + '">Удалить</button>') + '</div></div>';
+      }).join("") : '<p class="ad-muted" style="margin:16px 0">' + (allPromos.length ? "Ничего не нашлось." : "Кодов пока нет.") + '</p>';
+      box.querySelectorAll("[data-copy]").forEach(function (b) { b.onclick = function () { copy(linkOf(b.dataset.copy), b); }; });
+      box.querySelectorAll("[data-del]").forEach(function (b) { b.onclick = function () {
         var code = b.dataset.del;
         var go = function (ok) {
           if (!ok) return;
@@ -439,7 +515,7 @@
         var q = "Удалить код " + code + " совсем? Ссылка с ним перестанет работать.";
         if (tgApp && tgApp.showConfirm) tgApp.showConfirm(q, go); else go(confirm(q));
       }; });
-      app.querySelectorAll("[data-toggle]").forEach(function (b) { b.onclick = function () {
+      box.querySelectorAll("[data-toggle]").forEach(function (b) { b.onclick = function () {
         b.disabled = true;
         api("/promos/active", { code: b.dataset.toggle, active: b.dataset.active === "1" }).then(function () { return api("/promos"); }).then(renderPromos, fail);
       }; });
