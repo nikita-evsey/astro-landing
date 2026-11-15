@@ -437,6 +437,56 @@
     .ak-save { font-size: 14px; color: var(--muted); }
     .ak-err { color: var(--accent); font-size: 16px; }
     .ak-ok { background: #dbe8d5; color: #24502a; border-radius: 8px; padding: 10px 14px; font-size: 16px; }
+    /* Анкета 2026-11-15 (решение Никиты): события карточками по категориям, родные списком, дата – год / месяц / день + время года. */
+    @media (max-width: 640px) { .ak-form input, .ak-form select, .ak-form textarea { font-size: 16px; } }   /* iPhone не увеличивает страницу при вводе */
+    .ak-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .ak-c2 { font: inherit; font-size: 14px; line-height: 1.2; padding: 7px 12px; min-height: 36px; border: 1px solid var(--rule); border-radius: 99px; background: #fff; color: var(--ink); cursor: pointer; }
+    .ak-c2.on { background: #2f5d8a; border-color: #2f5d8a; color: #fff; }
+    .ak-c2[disabled] { cursor: default; }
+    .ak-c2[disabled]:not(.on) { opacity: .5; }
+    .ak-cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 12px; align-items: start; margin-top: 6px; }
+    @media (max-width: 640px) { .ak-cats { grid-template-columns: minmax(0, 1fr); } }
+    .ak-cc { border: 1px solid var(--rule); border-radius: 10px; background: #fff; padding: 12px 14px; scroll-margin-top: 70px; }
+    .ak-cc.none { background: #f4f1ea; }
+    .ak-cc.miss { border-color: var(--accent); box-shadow: 0 0 0 2px #7b2d3b22; }
+    .ak-cc-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .ak-cc-h b { font-size: 16px; }
+    .ak-q { font-size: 13px; color: var(--muted); margin: 3px 0 8px; line-height: 1.35; }
+    .ak-ev { border-top: 1px solid var(--rule); padding: 10px 0 2px; position: relative; display: grid; gap: 6px; }
+    .ak-ev:first-of-type { border-top: 0; padding-top: 0; }
+    .ak-ev .ak-x { position: absolute; right: -6px; top: 4px; }
+    .ak-ev > label, .ak-kin label.l { font-size: 12px; font-weight: 600; color: var(--muted); margin: 2px 0 0; }
+    .ak-add { font: inherit; font-size: 15px; width: 100%; padding: 9px 12px; margin-top: 10px; border: 1px dashed #2f5d8a; border-radius: 8px; background: #eef3f8; color: #2f5d8a; cursor: pointer; }
+    .ak-none { font: inherit; font-size: 14px; width: 100%; padding: 8px 12px; margin-top: 8px; border: 1px solid var(--rule); border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+    .ak-d2 .ymd { display: grid; grid-template-columns: 1fr 1.4fr .8fr; gap: 6px; max-width: 380px; margin-bottom: 6px; }
+    .ak-d2 .ak-chips { align-items: center; }
+    .ak-d2 .apx { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; font-weight: 400; margin: 0 0 0 4px; cursor: pointer; }
+    .ak-d2 .apx input { width: 18px; height: 18px; }
+    .ak-d2 .shown { font-size: 12px; color: var(--muted); margin-top: 4px; min-height: 16px; }
+    .ak-kin { border: 1px solid var(--rule); border-radius: 10px; background: #fff; padding: 4px 14px 12px; scroll-margin-top: 70px; }
+    .ak-kin.miss { border-color: var(--accent); box-shadow: 0 0 0 2px #7b2d3b22; }
+    .ak-kr { border-top: 1px solid var(--rule); padding: 10px 0; display: grid; gap: 6px; }
+    .ak-kr:first-child { border-top: 0; }
+    .ak-kr-h { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+    .ak-kr-h b { font-size: 15px; }
+    .ak-kr .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: 420px; }
+    .ak-top { position: sticky; top: 0; z-index: 5; background: var(--paper); border-bottom: 1px solid var(--rule); padding: 8px 0 7px; margin: 0 0 6px; }
+    .ak-top-row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 13px; }
+    .ak-scale { display: flex; gap: 3px; margin-top: 5px; max-width: 420px; }
+    .ak-scale i { flex: 1; height: 6px; border-radius: 3px; background: #e4ded2; }
+    .ak-scale i.on { background: #2f5d8a; }
+    .ak-scale.good i.on { background: #4a8a52; }
+    .ak-intro { background: var(--box); border-radius: 10px; padding: 12px 16px; margin: 8px 0; font-size: 15px; }
+    .ak-intro ul { margin: 6px 0; padding-left: 20px; }
+    .ak-intro li { margin: 5px 0; }
+    .ak-todo { background: #fbe7c6; border-radius: 10px; padding: 12px 14px; margin: 14px 0 0; }
+    .ak-todo ul { margin: 6px 0 8px; padding-left: 20px; }
+    .ak-todo textarea { width: 100%; min-height: 150px; font: inherit; font-size: 15px; margin-top: 8px; padding: 8px; border: 1px solid var(--rule); border-radius: 8px; }
+    .ak-block { background: #f7e3e3; border-radius: 10px; padding: 12px 14px; margin: 10px 0; font-size: 15px; }
+    .ak-block ul { margin: 6px 0 0; padding-left: 20px; }
+    .ak-block a { color: var(--accent); }
+    .ak-soft { background: #eef3f8; border-radius: 10px; padding: 10px 14px; margin: 10px 0; font-size: 15px; }
+    .ak-tree-open { margin-top: 6px; }
   </style>
 
   <div id="ak">
@@ -649,8 +699,9 @@
     function fmtParts(o) {
       if (!o) return "";
       if (typeof o === "string") return o;
-      var s = "", d = o.d, m = o.m, y = o.y;
-      if (d && m && y) s = (d < 10 ? "0" : "") + d + "." + (m < 10 ? "0" : "") + m + "." + y;
+      var s = "", d = o.d, m = o.m, y = o.y, SN = { winter: "зима", spring: "весна", summer: "лето", autumn: "осень" };
+      if (o.season && SN[o.season]) s = SN[o.season] + (y ? " " + y : "");   // время года (2026-11-15)
+      else if (d && m && y) s = (d < 10 ? "0" : "") + d + "." + (m < 10 ? "0" : "") + m + "." + y;
       else if (d && m) s = d + " " + M_GEN[m - 1];
       else if (m && y) s = M_NOM[m - 1] + " " + y;
       else if (y) s = String(y);
@@ -1243,6 +1294,7 @@
       // Рисуем через ELK; пока библиотека грузится (или если не загрузилась) – простая раскладка рядами.
       var drawSeq = 0;
       function draw() {
+        if (state.kinRefresh && !state.kinBusy) state.kinRefresh();   // список родных – те же люди
         if (window.ELK && !elkFailed) return drawElk();
         drawRows();
         if (!elkFailed) loadElk().then(function () { if (document.body.contains(stage)) draw(); }, function () { elkFailed = true; });
@@ -1747,8 +1799,9 @@
       function deathBlock(p) {
         var box = el("div", { class: "ak-death" }), dead = isDead(p), sx = sexOf(p);
         var locked = ro || (p.id !== "me" && !!fmtParts(p.death)) || (p.id === "me" && !!fmtParts(state.data.death_date));   // есть дата смерти – только «умер»
-        var setDead = function (v) { if (v === dead) return; if (v) p.dead = true; else delete p.dead; changed(); draw(); showPanel(); };
-        var bA = el("button", { type: "button", class: dead ? "" : "on", text: sx === "f" ? "Жива" : sx === "m" ? "Жив" : "Жив(а)", onclick: function () { setDead(false); } });
+        // «Жив» – явный ответ (alive), как в списке родных выше; списки и древо – одни и те же люди (решение Никиты 2026-11-15).
+        var setDead = function (v) { if (v === dead && (v || p.alive)) return; if (v) { p.dead = true; delete p.alive; } else { delete p.dead; delete p.death_unk; p.alive = true; } changed(); draw(); showPanel(); };
+        var bA = el("button", { type: "button", class: dead || !(p.alive || p.id === "me") ? "" : "on", text: sx === "f" ? "Жива" : sx === "m" ? "Жив" : "Жив(а)", onclick: function () { setDead(false); } });
         var bD = el("button", { type: "button", class: dead ? "on" : "", text: sx === "f" ? "Умерла" : sx === "m" ? "Умер" : "Умер(ла)", onclick: function () { setDead(true); } });
         bA.disabled = bD.disabled = locked;
         box.appendChild(el("div", { class: "ak-seg", title: locked && dead && !ro ? "Указана дата смерти" : "" }, [bA, bD]));
@@ -1924,12 +1977,435 @@
         if (sel === "me") showPanel();   // фокус – в поле анкеты выше, карточку можно перерисовать
       };
       draw(); showPanel();
+      state.treeRedraw = function () { if (document.body.contains(stage)) { draw(); showPanel(); } };
       window.addEventListener("resize", function () { if (document.body.contains(stage)) draw(); });
       // Линии – по фактическим размерам карточек: шрифт догрузился, текст перенёсся – пересчитываем (иначе линии «съезжают»).
       var relines = function () { if (lastCards && document.body.contains(stage) && !stage.classList.contains("elk")) lines(lastCards); };
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (document.body.contains(stage)) draw(); });
       if (window.ResizeObserver) { var ro2, tmr; ro2 = new ResizeObserver(function () { clearTimeout(tmr); tmr = setTimeout(relines, 30); }); ro2.observe(stage); }
       return box;
+    }
+
+
+    // ================= Анкета 2026-11-15: пол, родные списком, события по категориям (решение Никиты) =================
+    var SEASONS = [["winter", "Зима", 1], ["spring", "Весна", 4], ["summer", "Лето", 7], ["autumn", "Осень", 10]];
+    var SEASON_NAME = { winter: "зима", spring: "весна", summer: "лето", autumn: "осень" };
+    function dateText(o) {
+      if (!o || !o.y) return "";
+      var s = o.season ? SEASON_NAME[o.season] + " " + o.y + " (считаем как " + M_NOM[o.m - 1] + ")" : fmtParts({ d: o.d, m: o.m, y: o.y });
+      return (o.approx ? "примерно: " : "") + s;
+    }
+    function chipsNode(list, cur, pick, ro) {
+      return el("div", { class: "ak-chips" }, list.map(function (o) {
+        var b = el("button", { type: "button", class: "ak-c2" + (cur === o[0] ? " on" : ""), text: o[1], onclick: function () { pick(cur === o[0] ? "" : o[0]); } });
+        if (ro) b.disabled = true;
+        return b;
+      }));
+    }
+    // Дата: сверху год / месяц / день, снизу времена года (ставят середину сезона и подсвечиваются) и «Примерно».
+    // «лето 2002» (season) и «июль 2002» – разные записи. noSeasons – у детей: даты точные.
+    function dateInput2(value, onchange, noSeasons) {
+      var v = value && typeof value === "object" ? Object.assign({}, value) : {}, ro = state.cab.locked;
+      var HINT = noSeasons ? "Год, месяц и день" : "Год обязательно. Месяц и день – если помните, или выберите время года";
+      var y = el("input", { type: "text", inputmode: "numeric", placeholder: "Год", maxlength: "4", "aria-label": "Год" });
+      var m = el("select", { "aria-label": "Месяц" }, [el("option", { value: "", text: "Месяц" })].concat(M_NOM.map(function (n, i) { return el("option", { value: String(i + 1), text: n }); })));
+      var d = el("input", { type: "text", inputmode: "numeric", placeholder: "День", maxlength: "2", "aria-label": "День" });
+      var a = el("input", { type: "checkbox" });
+      var shown = el("div", { class: "shown" });
+      var sb = {};
+      y.value = v.y || ""; m.value = v.m ? String(v.m) : ""; d.value = v.season ? "" : (v.d || ""); a.checked = !!v.approx;
+      function out() {
+        var o = {}, yy = parseInt(y.value, 10), dd = parseInt(d.value, 10);
+        if (yy >= 1000 && yy <= 2100) o.y = yy;
+        if (m.value) o.m = +m.value;
+        if (v.season) { o.season = v.season; o.m = SEASONS.filter(function (x) { return x[0] === v.season; })[0][2]; }
+        else if (dd >= 1 && dd <= 31) o.d = dd;
+        if (a.checked) o.approx = true;
+        shown.textContent = dateText(o) || HINT;
+        Object.keys(sb).forEach(function (k) { sb[k].className = "ak-c2" + (v.season === k ? " on" : ""); });
+        onchange(o);
+      }
+      y.addEventListener("input", out);
+      m.addEventListener("change", function () { v.season = ""; out(); });
+      d.addEventListener("input", function () { if (d.value) v.season = ""; out(); });
+      a.addEventListener("change", out);
+      [y, m, d, a].forEach(function (n) { n.disabled = ro; });
+      var row = el("div", { class: "ak-chips" });
+      if (!noSeasons) SEASONS.forEach(function (x) {
+        var b = el("button", { type: "button", class: "ak-c2" + (v.season === x[0] ? " on" : ""), text: x[1], onclick: function () {
+          v.season = v.season === x[0] ? "" : x[0];
+          m.value = v.season ? String(x[2]) : ""; d.value = ""; out();
+        } });
+        b.disabled = ro; sb[x[0]] = b; row.appendChild(b);
+      });
+      row.appendChild(el("label", { class: "apx" }, [a, "Примерно"]));
+      var box = el("div", { class: "ak-d2" }, [el("div", { class: "ymd" }, [y, m, d]), row, shown]);
+      shown.textContent = dateText(v) || HINT;
+      return box;
+    }
+
+    // ---------- люди древа для списка родных (те же объекты, что рисует древо) ----------
+    var KIN_BASE = [["mom", "Мама"], ["dad", "Папа"], ["gm_m", "Бабушка по маме"], ["gf_m", "Дедушка по маме"], ["gm_d", "Бабушка по папе"], ["gf_d", "Дедушка по папе"]];
+    function kTree() {
+      var t = state.data.tree;
+      if (!t || !Array.isArray(t.people)) t = state.data.tree = { people: [], unions: [] };
+      if (!Array.isArray(t.unions)) t.unions = [];
+      if (!t.people.some(function (p) { return p.id === "me"; })) t.people.unshift({ id: "me", parents: [] });
+      return t;
+    }
+    function kById(id) { var P = kTree().people; for (var i = 0; i < P.length; i++) if (P[i].id === id) return P[i]; return null; }
+    function kSex(p) {
+      if (!p) return ""; if (p.sex) return p.sex;
+      var r = String(p.rel || "").toLowerCase().trim();
+      if (/^(мама|мать|бабушка|прабабушка|сестра|дочь|жена|тётя|тетя|мачеха|супруга)/.test(r)) return "f";
+      if (/^(папа|отец|дедушка|прадедушка|брат|сын|муж|дядя|отчим)/.test(r)) return "m";
+      return "";
+    }
+    function kParents(p, n) { if (!p) return []; if (p.same && (n || 0) < 20) return kParents(kById(p.same), (n || 0) + 1); if (!Array.isArray(p.parents)) p.parents = []; return p.parents; }
+    function kBlood(p) { return kParents(p).map(kById).filter(function (x) { return x && !x.step; }); }
+    function kNewId() { var n = 1; while (kById("p" + n)) n++; return "p" + n; }
+    function kAddParent(x, sex, rel) {
+      if (x.same) { x.parents = kParents(x).slice(); x.sib = x.same; delete x.same; }
+      var p = { id: kNewId(), rel: rel, first: "", parents: [], sex: sex };
+      kTree().people.push(p); kParents(x).push(p.id); return p;
+    }
+    function kTwo(x, labels, create) {
+      var ps = kBlood(x), f = null, m = null;
+      ps.forEach(function (q) { var s = kSex(q); if (s === "f" && !f) f = q; else if (s === "m" && !m) m = q; });
+      ps.forEach(function (q) { if (q !== f && q !== m) { if (!f) f = q; else if (!m) m = q; } });
+      if (create) { if (!f) f = kAddParent(x, "f", labels[0]); if (!m) m = kAddParent(x, "m", labels[1]); }
+      return [f, m];
+    }
+    function kinBase(create) {
+      var me = kById("me"), mp = kTwo(me, ["Мама", "Папа"], create);
+      var g1 = mp[0] ? kTwo(mp[0], ["Бабушка по маме", "Дедушка по маме"], create) : [null, null];
+      var g2 = mp[1] ? kTwo(mp[1], ["Бабушка по папе", "Дедушка по папе"], create) : [null, null];
+      return [mp[0], mp[1], g1[0], g1[1], g2[0], g2[1]].map(function (p, i) { return { key: KIN_BASE[i][0], label: KIN_BASE[i][1], person: p }; });
+    }
+    function hasY(o) { return !!(o && typeof o === "object" && o.y); }
+    function kinAnswered(p) { return !!p && (!!p.alive || ((p.dead || hasY(p.death)) && (hasY(p.death) || !!p.death_unk))); }
+    function kinOthers(base) {
+      var skip = { me: 1 }; base.forEach(function (k) { if (k.person) skip[k.person.id] = 1; });
+      return kTree().people.filter(function (p) { return !skip[p.id] && (p.dead || hasY(p.death) || p.death_unk); });
+    }
+    function kinSync() { state.kinBusy = true; try { if (state.treeRedraw) state.treeRedraw(); } finally { state.kinBusy = false; } }
+    function lc(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
+    function fem(p) { return kSex(p) === "f"; }
+
+    function kinField(f) {
+      var ro = state.cab.locked, box = el("div", { class: "ak-kin wide", id: "ak-kin" });
+      var addStep = "";
+      function deathRow(p, label, other) {
+        var r = el("div", { class: "ak-kr" });
+        var head = el("div", { class: "ak-kr-h" }, [el("b", { text: label + (pname(p) && !other ? " – " + pname(p) : "") })]);
+        if (other && !ro) head.appendChild(el("button", { type: "button", class: "ak-link", style: "font-size:13px", text: "убрать", onclick: function () {
+          if (!confirm("Убрать «" + (p.rel || "родственника") + (pname(p) ? " " + pname(p) : "") + "» из списка и древа?")) return;
+          var T = kTree();
+          T.people.forEach(function (o) { if (o.same === p.id) { o.parents = kParents(p).slice(); delete o.same; } if (o.sib === p.id) delete o.sib; if (Array.isArray(o.parents)) o.parents = o.parents.filter(function (x) { return x !== p.id; }); });
+          T.unions = T.unions.filter(function (u) { return u.a !== p.id && u.b !== p.id; });
+          T.people.splice(T.people.indexOf(p), 1);
+          changed(); draw(); kinSync();
+        } }));
+        r.appendChild(head);
+        if (other) {
+          var rel = input({ id: "kin-rel", type: "text" }, p.rel, function (v) { p.rel = v; changed(); });
+          var nm = input({ id: "kin-name", type: "text" }, p.first, function (v) { p.first = v; changed(); });
+          rel.setAttribute("placeholder", "Кем приходится"); nm.setAttribute("placeholder", "Имя");
+          [rel, nm].forEach(function (n) { n.addEventListener("change", kinSync); });
+          r.appendChild(el("div", { class: "two" }, [rel, nm]));
+        }
+        var dead = !!(p.dead || hasY(p.death));
+        if (!other) r.appendChild(chipsNode([["alive", fem(p) ? "Жива" : "Жив"], ["dead", fem(p) ? "Умерла" : "Умер"]], p.alive ? "alive" : dead ? "dead" : "", function (v) {
+          if (v === "alive") { p.alive = true; delete p.dead; p.death = {}; delete p.death_unk; }
+          else if (v === "dead") { delete p.alive; p.dead = true; }
+          else { delete p.alive; delete p.dead; delete p.death_unk; p.death = {}; }
+          changed(); draw(); kinSync();
+        }, ro));
+        if (dead || other) {
+          if (!p.death_unk) {
+            r.appendChild(el("label", { class: "l", text: "Когда " + (fem(p) ? "умерла" : "умер") }));
+            var di = dateInput2(p.death, function (v) { p.death = v; if (v.y) p.dead = true; changed(); });
+            di.addEventListener("change", kinSync, true);
+            r.appendChild(di);
+          }
+          r.appendChild(chipsNode([["later", "Дату узнаю позже"], ["never", "Дату не смогу узнать"]], p.death_unk || "", function (v) {
+            if (v) { p.death_unk = v; p.death = {}; p.dead = true; } else delete p.death_unk;
+            changed(); draw(); kinSync();
+          }, ro));
+        }
+        return r;
+      }
+      function addPerson(o) { var p = Object.assign({ id: kNewId(), first: "", parents: [], dead: true }, o); kTree().people.push(p); return p; }
+      function addMenu() {
+        var wrap = el("div", {});
+        if (addStep === "") {
+          if (!ro) wrap.appendChild(el("button", { type: "button", class: "ak-add", text: "+ Добавить других родственников", onclick: function () { addStep = "menu"; draw(); } }));
+          wrap.appendChild(el("div", { class: "ak-hint", style: "margin-top:6px", text: "Прабабушки и прадедушки, братья и сёстры, дяди и тёти, супруги, дети – кого из родных вы потеряли. Только родственники." }));
+          return wrap;
+        }
+        var done = function () { addStep = ""; changed(); draw(); kinSync(); };
+        var base = kinBase(true), mom = base[0].person, dad = base[1].person;
+        wrap.appendChild(el("div", { class: "ak-q", style: "margin-top:10px", text: addStep === "menu" ? "Кого добавить?" : addStep.indexOf("great") === 0 ? "Чья мама или папа?" : "С чьей стороны?" }));
+        var opts = [];
+        if (addStep === "menu") opts = [["great:f", "Прабабушка"], ["great:m", "Прадедушка"], ["brother", "Брат"], ["sister", "Сестра"], ["uncle", "Дядя"], ["aunt", "Тётя"],
+          ["husband", "Муж"], ["wife", "Жена"], ["son", "Сын"], ["daughter", "Дочь"], ["other", "Другой родственник"]];
+        else if (addStep.indexOf("great") === 0) opts = base.slice(2).map(function (k) { return [k.key, (addStep === "great:f" ? "Мама" : "Папа") + " – " + lc(k.label) + (pname(k.person) ? " " + pname(k.person) : "")]; });
+        else opts = [["mom", "По маме"], ["dad", "По папе"]];
+        opts.push(["cancel", "Отмена"]);
+        wrap.appendChild(el("div", { class: "ak-chips" }, opts.map(function (o) {
+          return el("button", { type: "button", class: "ak-c2", text: o[1], onclick: function () {
+            var k = o[0];
+            if (k === "cancel") { addStep = ""; draw(); return; }
+            if (addStep === "menu") {
+              if (k.indexOf("great") === 0 || k === "uncle" || k === "aunt") { addStep = k === "uncle" || k === "aunt" ? "side:" + k : k; draw(); return; }
+              if (k === "brother" || k === "sister") addPerson({ rel: k === "brother" ? "Брат" : "Сестра", sex: k === "brother" ? "m" : "f", same: "me" });
+              else if (k === "son" || k === "daughter") addPerson({ rel: k === "son" ? "Сын" : "Дочь", sex: k === "son" ? "m" : "f", parents: ["me"] });
+              else if (k === "husband" || k === "wife") {
+                var sp = addPerson({ rel: k === "husband" ? "Муж" : "Жена", sex: k === "husband" ? "m" : "f" }), T = kTree(), n = 1;
+                while (T.unions.some(function (u) { return u.id === "u" + n; })) n++;
+                T.unions.push({ id: "u" + n, a: "me", b: sp.id, kind: "marriage", start: {}, end: {}, end_kind: "widow" });
+              } else addPerson({ rel: "Родственник" });
+              return done();
+            }
+            if (addStep.indexOf("great") === 0) {
+              var g = base.filter(function (b) { return b.key === k; })[0].person, sx = addStep === "great:f" ? "f" : "m";
+              var ex = kTwo(g, [], false)[sx === "f" ? 0 : 1];
+              var rel = (sx === "f" ? "Прабабушка" : "Прадедушка") + " (" + lc(base.filter(function (b) { return b.key === k; })[0].label) + ")";
+              if (ex) { delete ex.alive; ex.dead = true; if (!ex.rel) ex.rel = rel; }
+              else { var np = kAddParent(g, sx, rel); np.dead = true; }
+              return done();
+            }
+            var uncle = addStep === "side:uncle", par = k === "mom" ? mom : dad;
+            addPerson({ rel: (uncle ? "Дядя" : "Тётя") + (k === "mom" ? " по маме" : " по папе"), sex: uncle ? "m" : "f", same: par.id });
+            return done();
+          } });
+        })));
+        return wrap;
+      }
+      function draw() {
+        while (box.firstChild) box.removeChild(box.firstChild);
+        var base = kinBase(true);
+        base.forEach(function (k) { box.appendChild(deathRow(k.person, k.label, false)); });
+        var others = kinOthers(base);
+        if (others.length) {
+          box.appendChild(el("div", { class: "ak-group-t", style: "margin-top:12px", text: "Другие умершие родственники" }));
+          others.forEach(function (p) { box.appendChild(deathRow(p, p.rel || "Родственник", true)); });
+        }
+        box.appendChild(addMenu());
+        box.appendChild(el("div", { class: "ak-hint", style: "margin-top:8px" }, ["Эти же люди – в семейном древе ниже, правки видны и там, и здесь. ",
+          el("button", { type: "button", class: "ak-link", style: "font-size:12px", text: "Посмотреть древо", onclick: function () { openTree(); } })]));
+        var miss = state.tried && f.required && base.some(function (k) { return !kinAnswered(k.person); });
+        box.className = "ak-kin wide" + (miss ? " miss" : "");
+        if (state.refreshTop) state.refreshTop();
+      }
+      state.kinRefresh = draw;
+      draw();
+      return box;
+    }
+
+    // ---------- события по категориям ----------
+    function catOf(e, f) {
+      if (e && e.cat && f.cats.some(function (c) { return c.id === e.cat; })) return e.cat;
+      for (var i = 0; i < f.cats.length; i++) if (f.cats[i].types.indexOf(e && e.type) >= 0) return f.cats[i].id;
+      return "other";
+    }
+    function evFilled(e) { return !!(e && e.type && (hasY(e.date) || String(e.comment || "").trim() || String(e.name || "").trim())); }
+    function evUsed(e) { return !!(e && (hasY(e.date) || String(e.comment || "").trim() || String(e.name || "").trim())); }
+    function catAnswered(c, f) {
+      var none = state.data.none || {};
+      return !!none[c.id] || (state.data.events || []).some(function (e) { return catOf(e, f) === c.id && evFilled(e); });
+    }
+    function catsField(f) {
+      var ro = state.cab.locked, box = el("div", { class: "ak-cats wide" });
+      if (!Array.isArray(state.data.events)) state.data.events = [];
+      var E = state.data.events;
+      E.forEach(function (e) { if (e && typeof e === "object" && !e.cat) e.cat = catOf(e, f); });
+      f.cats.forEach(function (c) {
+        var card = el("div", { class: "ak-cc", id: "ak-cat-" + c.id });
+        function rows() { return E.filter(function (e) { return e && typeof e === "object" && e.cat === c.id; }); }
+        function draw() {
+          while (card.firstChild) card.removeChild(card.firstChild);
+          var none = state.data.none && state.data.none[c.id], rs = rows(), ok = catAnswered(c, f);
+          card.className = "ak-cc" + (none ? " none" : "") + (state.tried && f.required && !ok ? " miss" : "");
+          var badge = f.required ? el("span", { class: "ak-badge " + (ok ? "sent" : "draft"), text: none ? (c.none || "Не было") : ok ? "Готово" : "Нужен ответ" }) : null;
+          card.appendChild(el("div", { class: "ak-cc-h" }, [el("b", { text: c.label }), badge]));
+          if (none) {
+            if (!ro) card.appendChild(el("button", { type: "button", class: "ak-link", style: "font-size:14px;margin-top:4px", text: "Изменить", onclick: function () { delete state.data.none[c.id]; changed(); draw(); } }));
+            return;
+          }
+          card.appendChild(el("div", { class: "ak-q", text: c.q }));
+          if (!c.kid && !rs.length) { E.push({ cat: c.id, type: c.types.length === 1 ? c.types[0] : "" }); rs = rows(); }
+          rs.forEach(function (e) {
+            var ev = el("div", { class: "ak-ev" });
+            if (!ro && (rs.length > 1 || evUsed(e) || c.kid)) ev.appendChild(el("button", { type: "button", class: "ak-x", title: "Удалить", text: "×", onclick: function () { E.splice(E.indexOf(e), 1); changed(); draw(); } }));
+            if (c.types.length > 1) {
+              var ts = c.types.slice(); if (e.type && ts.indexOf(e.type) < 0) ts.push(e.type);   // старый тип – не теряем
+              ev.appendChild(el("label", { text: "Что" }));
+              ev.appendChild(chipsNode(ts.map(function (t) { return [t, t]; }), e.type || "", function (v) { e.type = v; changed(); draw(); }, ro));
+            } else if (!e.type) e.type = c.types[0];
+            else if (e.type !== c.types[0]) ev.appendChild(el("div", { class: "ak-hint", text: e.type }));   // старый тип в «Другом»
+            if (c.kid) {
+              ev.appendChild(el("label", { text: "Имя и пол ребёнка" }));
+              var ni = input({ id: "ev-name", type: "text" }, e.name, function (v) { e.name = v; changed(); });
+              ni.setAttribute("placeholder", "Имя");
+              ev.appendChild(el("div", { style: "display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;max-width:420px" }, [ni,
+                chipsNode([["f", "Девочка"], ["m", "Мальчик"]], e.sex || "", function (v) { e.sex = v; changed(); draw(); }, ro)]));
+            }
+            ev.appendChild(el("label", { text: "Когда" }));
+            ev.appendChild(dateInput2(e.date, function (v) { e.date = v; changed(); }, c.kid));
+            ev.appendChild(el("label", { text: "Комментарий" }));
+            var ci = input({ id: "ev-comment", type: "text" }, e.comment, function (v) { e.comment = v; changed(); });
+            ci.setAttribute("placeholder", "Коротко: что именно");
+            ev.appendChild(ci);
+            card.appendChild(ev);
+          });
+          if (ro) return;
+          card.appendChild(el("button", { type: "button", class: "ak-add", text: c.kid ? (rs.length ? c.more : c.add) : "+ Ещё событие", onclick: function () {
+            E.push({ cat: c.id, type: c.types.length === 1 ? c.types[0] : "" }); changed(); draw();
+          } }));
+          if (!rs.some(evUsed)) card.appendChild(el("button", { type: "button", class: "ak-none", text: c.none || "Не было", onclick: function () {
+            for (var i = E.length - 1; i >= 0; i--) if (E[i] && E[i].cat === c.id && !evUsed(E[i])) E.splice(i, 1);
+            state.data.none = state.data.none || {}; state.data.none[c.id] = true; changed(); draw();
+          } }));
+        }
+        state.catDraws.push(draw);
+        draw();
+        box.appendChild(card);
+      });
+      return box;
+    }
+
+    // ---------- шкала сверху, «Осталось узнать», проверка перед отправкой ----------
+    function catsSpec() { return state.item.fields.filter(function (x) { return x.type === "cats"; })[0]; }
+    function kinSpec() { return state.item.fields.filter(function (x) { return x.type === "kin"; })[0]; }
+    function scoreNow() {
+      var cf = catsSpec(), kf = kinSpec(), key = 0, done = 0, total = 0;
+      var keyCat = {}; if (cf) cf.cats.forEach(function (c) { if (c.key) keyCat[c.id] = 1; });
+      if (kf) {
+        var base = kinBase(false);
+        total++; if (base.every(function (k) { return kinAnswered(k.person); })) done++;
+        base.concat(kinOthers(base).map(function (p) { return { person: p }; })).forEach(function (k) { if (k.person && hasY(k.person.death)) key++; });
+      }
+      if (cf) {
+        cf.cats.forEach(function (c) { total++; if (catAnswered(c, cf)) done++; });
+        (state.data.events || []).forEach(function (e) { if (e && e.type && hasY(e.date) && keyCat[catOf(e, cf)]) key++; });
+      }
+      return { key: key, done: done, total: total, level: key >= 5 ? 2 : key >= 3 ? 1 : 0 };
+    }
+    function topBar() {
+      var bar = el("div", { class: "ak-top" });
+      state.refreshTop = function () {
+        var sc = scoreNow(), names = ["мало", "достаточно", "хорошо"];
+        while (bar.firstChild) bar.removeChild(bar.firstChild);
+        var line = el("div", { class: "ak-scale" + (sc.level ? " good" : "") });
+        for (var i = 0; i < 5; i++) line.appendChild(el("i", { class: i < Math.min(sc.key, 5) ? "on" : "" }));
+        bar.appendChild(el("div", { class: "ak-top-row" }, [
+          el("span", {}, ["Главных событий с датой: ", el("b", { text: sc.key + " – " + names[sc.level] })]),
+          el("span", { text: "Разделы: " + sc.done + " из " + sc.total }),
+        ]));
+        bar.appendChild(line);
+        if (state.refreshTodo) state.refreshTodo();
+      };
+      return bar;
+    }
+    function todoList() {
+      var out = [], cf = catsSpec();
+      if (kinSpec()) {
+        var base = kinBase(false);
+        base.map(function (k) { return [k.person, k.label]; }).concat(kinOthers(base).map(function (p) { return [p, p.rel || "Родственник"]; })).forEach(function (x) {
+          var p = x[0];
+          if (p && p.dead && p.death_unk === "later" && !hasY(p.death)) out.push("Когда " + (fem(p) ? "умерла " : "умер ") + lc(x[1]) + (pname(p) ? " " + pname(p) : "") + "?");
+        });
+      }
+      if (cf) (state.data.events || []).forEach(function (e) {
+        if (e && e.type && !hasY(e.date) && (String(e.comment || "").trim() || String(e.name || "").trim())) out.push("Когда было: " + lc(e.type) + " (" + (e.name || e.comment) + ")?");
+      });
+      return out;
+    }
+    function todoBox() {
+      var box = el("div", { class: "ak-todo wide" }), head = el("b", {}), list = el("ul", {}), txt = null;
+      box.appendChild(head); box.appendChild(list);
+      box.appendChild(el("div", { class: "ak-hint", text: "Отметки «узнаю позже» и события без даты. Узнаете – допишите в анкету, правки сохраняются сами." }));
+      var gen = el("button", { type: "button", class: "ak-link", style: "font-size:14px;margin-top:6px", text: "Сгенерировать текст для родных, чтобы спросить даты", onclick: function () {
+        var items = todoList();
+        var t = "Привет! Заполняю анкету о нашей семье, и мне не хватает нескольких дат. Если точную не помнишь – подойдёт месяц или хотя бы время года и год (например, «осенью 1998»).\n\n" +
+          items.map(function (x) { return "– " + x; }).join("\n") + "\n\nСпасибо!";
+        if (!txt) {
+          txt = el("textarea", {});
+          var cp = el("button", { type: "button", class: "ak-btn ghost", style: "margin-top:8px", text: "Скопировать", onclick: function () {
+            try { navigator.clipboard.writeText(txt.value).then(function () { cp.textContent = "Скопировано"; }, function () { txt.select(); }); } catch (e) { txt.select(); }
+          } });
+          box.appendChild(txt); box.appendChild(cp);
+        }
+        txt.value = t;
+      } });
+      box.appendChild(gen);
+      state.refreshTodo = function () {
+        var items = todoList();
+        box.style.display = items.length ? "" : "none";
+        head.textContent = "Осталось узнать: " + items.length;
+        while (list.firstChild) list.removeChild(list.firstChild);
+        items.forEach(function (x) { list.appendChild(el("li", { text: x })); });
+      };
+      return box;
+    }
+    // Что мешает отправить: [якорь, текст]. Пустые обязательные поля, пол, родные, разделы событий.
+    function blockers() {
+      var out = [];
+      state.item.fields.forEach(function (f) {
+        if (!f.required) return;
+        if (f.type === "kin") {
+          var left = kinBase(false).filter(function (k) { return !kinAnswered(k.person); }).map(function (k) { return lc(k.label); });
+          if (left.length) out.push(["ak-kin", "Родные: отметьте – жив или когда умер (" + left.join(", ") + ")"]);
+        } else if (f.type === "cats") {
+          f.cats.forEach(function (c) { if (!catAnswered(c, f)) out.push(["ak-cat-" + c.id, c.label + ": запишите событие или нажмите «" + (c.none || "Не было") + "»"]); });
+        } else if (f.type !== "section" && f.type !== "tree" && !String(state.data[f.id] == null ? "" : state.data[f.id]).trim()) out.push(["ak-f-" + f.id, f.label]);
+      });
+      return out;
+    }
+    function goTo(id) {
+      var n = document.getElementById(id) || document.querySelector('#ak [data-f="' + id.replace("ak-f-", "") + '"]');
+      if (!n) return;
+      window.scrollTo(0, n.getBoundingClientRect().top + window.scrollY - 80);
+      var inp = n.matches && n.matches("input,select,textarea") ? n : null; if (inp) inp.focus();
+    }
+    function choiceField(f) {
+      var wrap = el("div", { class: "fld", id: "ak-f-" + f.id });
+      wrap.appendChild(el("label", { class: f.required ? "req" : "", text: f.label }));
+      var draw = function () {
+        if (wrap.lastChild && wrap.lastChild.className === "ak-chips") wrap.removeChild(wrap.lastChild);
+        wrap.appendChild(chipsNode(f.options, state.data[f.id] || "", function (v) {
+          state.data[f.id] = v;
+          if (f.id === "sex" && state.item.kind !== "relative") { var me = kById("me"); if (me) { if (v) me.sex = v; else delete me.sex; } }
+          changed(); draw();
+        }, state.cab.locked));
+      };
+      draw();
+      return wrap;
+    }
+    var INTRO_KEY = "ak-intro-hide";
+    function introCard() {
+      var hidden = false; try { hidden = localStorage.getItem(INTRO_KEY) === "1"; } catch (e) {}
+      var box = el("div", { class: "ak-intro wide" });
+      var draw = function () {
+        while (box.firstChild) box.removeChild(box.firstChild);
+        if (hidden) { box.appendChild(el("button", { type: "button", class: "ak-link", style: "font-size:14px", text: "Как заполнять анкету", onclick: function () { hidden = false; try { localStorage.removeItem(INTRO_KEY); } catch (e) {} draw(); } })); return; }
+        box.appendChild(el("b", { text: "Как заполнять" }));
+        box.appendChild(el("ul", {}, [
+          el("li", {}, [el("b", { text: "По событиям жизни Никита уточняет время рождения (ректификация). " }), "Нужно хотя бы 3–4 события с датой. Лучше всего – смерти близких, браки и разводы, карьера, финансы."]),
+          el("li", {}, [el("b", { text: "Точная дата не обязательна. " }), "Не помните день – вспомните время года: было это летом или зимой. Для ректификации этого достаточно."]),
+          el("li", {}, [el("b", { text: "В каждом разделе – ответ. " }), "Было – запишите. Не было – нажмите «Не было». Пока ответа нет, анкету не отправить."]),
+          el("li", {}, [el("b", { text: "Не обязательно всё за один раз. " }), "Даты, которые надо узнать у родных, отметьте «узнаю позже» и допишите потом: анкета сохраняется сама и остаётся открытой и после отправки."]),
+        ]));
+        box.appendChild(el("button", { type: "button", class: "ak-link", style: "font-size:14px", text: "Понятно, свернуть", onclick: function () { hidden = true; try { localStorage.setItem(INTRO_KEY, "1"); } catch (e) {} draw(); } }));
+      };
+      draw();
+      return box;
+    }
+    // Древо на телефоне свёрнуто (решение Никиты 2026-11-15): при первом заполнении мешает, открывается кнопкой.
+    function openTree() {
+      if (state.treeOpen) state.treeOpen();
+      var t = document.getElementById("ak-tree-sec"); if (t) window.scrollTo(0, t.getBoundingClientRect().top + window.scrollY - 70);
     }
 
     // Заголовок вкладки: «Имя Фамилия – Анкета» (решение Никиты 2026-11-11).
@@ -1941,18 +2417,34 @@
       root.appendChild(el("button", { class: "ak-link", text: "← Все анкеты", onclick: function () { flush().then(showCabinet); } }));
       root.appendChild(el("h1", { text: it.label }));
       root.appendChild(el("p", { class: "ak-muted", text: it.cabinet.product + (it.cabinet.deadline ? " · заполнить до " + it.cabinet.deadline.text : "") }));
-      if (it.status === "sent") root.appendChild(el("p", { class: "ak-ok", text: "Анкета отправлена " + when(it.submitted_at) + ". Можно поправить и отправить ещё раз." }));
+      if (it.status === "sent") root.appendChild(el("p", { class: "ak-ok", text: "Анкета отправлена " + when(it.submitted_at) + ". Она остаётся открытой: вспомнили событие или узнали дату у родных – допишите здесь. Правки сохраняются сами, Никита получит уведомление." }));
       if (it.person) root.appendChild(el("div", { class: "ak-from", text: "Из древа: " + [it.person.rel, it.person.name].filter(Boolean).join(" – ") +
         [fmtParts(it.person.birth) ? ", р. " + fmtParts(it.person.birth) : "", it.person.time ? " " + it.person.time : "", it.person.place ? ", " + it.person.place : "", fmtParts(it.person.death) ? ", † " + fmtParts(it.person.death) : ""].join("") }));
       if (state.restored) { root.appendChild(el("p", { class: "ak-ok", text: "Восстановил несохранённые правки из этого браузера." })); state.restored = false; setTimeout(flush, 300); }
       var form = el("div", { class: "ak-form" }), groups = {};
-      state.showIf = [];
+      state.showIf = []; state.catDraws = []; state.tried = false;
+      state.kinRefresh = state.treeRedraw = state.refreshTop = state.refreshTodo = state.treeOpen = null;
+      var newStyle = it.fields.some(function (x) { return x.type === "cats" && x.required; });
+      if (newStyle) { root.appendChild(topBar()); form.appendChild(introCard()); }
       it.fields.forEach(function (f) {
         if (f.type === "section") {
-          form.appendChild(el("div", { class: "ak-section wide", text: f.label }));
+          var sec = el("div", { class: "ak-section wide", text: f.label });
+          if (it.fields[it.fields.indexOf(f) + 1] && it.fields[it.fields.indexOf(f) + 1].type === "tree") sec.id = "ak-tree-sec";
+          form.appendChild(sec);
           if (f.hint) form.appendChild(el("div", { class: "ak-hint wide", text: f.hint }));
         } else if (f.type === "rows") form.appendChild(rowsField(f));
-        else if (f.type === "tree") form.appendChild(treeField(f));
+        else if (f.type === "tree") {
+          if (newStyle && window.innerWidth <= 640) {
+            var holder = el("div", { class: "wide ak-tree-open" });
+            var ob = el("button", { type: "button", class: "ak-btn ghost", text: "Показать семейное древо" });
+            state.treeOpen = function () { if (!holder.firstChild || holder.firstChild !== ob) return; holder.removeChild(ob); holder.appendChild(treeField(f)); state.treeOpen = null; };
+            ob.onclick = function () { state.treeOpen(); };
+            holder.appendChild(ob); form.appendChild(holder);
+          } else form.appendChild(treeField(f));
+        }
+        else if (f.type === "choice") form.appendChild(choiceField(f));
+        else if (f.type === "kin") form.appendChild(kinField(f));
+        else if (f.type === "cats") form.appendChild(catsField(f));
         else if (f.type === "date3") {   // дата частями (анкета родственника: даты рождения и смерти)
           var dw = el("div", { class: "fld d3cell" });
           dw.appendChild(el("label", { class: f.required ? "req" : "", text: f.label }));
@@ -1977,11 +2469,13 @@
         // Поле нового типа, а страница старая (кэш браузера): не показываем и не трогаем данные – просим обновить.
         else form.appendChild(el("p", { class: "ak-err wide", text: "«" + f.label + "»: обновите страницу, чтобы заполнить это поле." }));
       });
+      if (newStyle) form.appendChild(todoBox());
       root.appendChild(form);
+      if (state.refreshTop) state.refreshTop();
       requestAnimationFrame(growAll);
       var status = el("span", { class: "ak-save", id: "ak-save", text: it.updated_at ? "Сохранено " + when(it.updated_at) : "" });
       var err = el("div", { class: "ak-err", id: "ak-err" });
-      var btn = el("button", { class: "ak-btn", text: it.status === "sent" ? "Отправить исправления" : "Отправить Никите", onclick: submit });
+      var btn = el("button", { class: "ak-btn", text: it.status === "sent" ? "Отправить правки сейчас" : "Отправить Никите", onclick: submit });
       if (state.cab.locked) btn.disabled = true;
       root.appendChild(el("div", { class: "ak-bar" }, [btn, status]));
       root.appendChild(err);
@@ -1992,6 +2486,7 @@
       state.dirty = true; setSave("Сохраняю…");
       if (state.item && state.item.kind !== "relative") setTitle(pname(state.data));
       (state.showIf || []).forEach(function (fn) { fn(); });
+      if (state.refreshTop) state.refreshTop();
       lsPut(state.item.id, state.data, state.rev);
       clearTimeout(state.timer); state.timer = setTimeout(flush, 1200);
     }
@@ -2013,13 +2508,26 @@
     }
     function submit() {
       var err = document.getElementById("ak-err"); err.textContent = "";
+      var bl = blockers();
+      if (bl.length) {
+        state.tried = true;
+        (state.catDraws || []).forEach(function (fn) { fn(); });
+        if (state.kinRefresh) state.kinRefresh();
+        err.appendChild(el("div", { class: "ak-block" }, [el("b", { text: "Чтобы отправить, ответьте:" }), el("ul", {}, bl.map(function (b) {
+          return el("li", {}, [el("a", { href: "#", text: b[1], onclick: function (e) { e.preventDefault(); goTo(b[0]); } })]);
+        }))]));
+        return;
+      }
+      var sc = state.item.fields.some(function (x) { return x.type === "cats" && x.required; }) ? scoreNow() : null;
+      if (sc && sc.key < 3 && !confirm("Главных событий с датой пока " + sc.key + ". Для уверенной ректификации нужно хотя бы 3–4: смерти близких, браки и разводы, карьера, финансы. Отправить так? Дописать можно и после отправки.")) return;
       clearTimeout(state.timer); state.dirty = false;
       var id = state.item.id;
       api("/submit", { id: id, rev: state.rev, data: state.data, tree_rev: state.item.tree_rev }).then(function (r) {
         lsDel(id); state.rev = r.rev; if (r.tree_rev) state.item.tree_rev = r.tree_rev;
         clear();
         root.appendChild(el("h1", { text: "Спасибо!" }));
-        root.appendChild(el("p", { text: r.all_done ? "Все анкеты у Никиты. Если что-то вспомните – их можно поправить по этой же ссылке до звонка." : "Анкета у Никиты. Осталось заполнить остальные анкеты." }));
+        root.appendChild(el("p", { text: r.all_done ? "Все анкеты у Никиты." : "Анкета у Никиты. Осталось заполнить остальные анкеты." }));
+        root.appendChild(el("p", { text: "Анкета остаётся открытой: вспомните событие или узнаете дату у родных – допишите по этой же ссылке. Правки сохраняются сами, Никита получит уведомление." }));
         root.appendChild(el("button", { class: "ak-btn", text: "К списку анкет", onclick: showCabinet }));
         window.scrollTo(0, 0);
       }).catch(function (e) {
