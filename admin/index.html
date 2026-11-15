@@ -379,6 +379,8 @@
     function linkOf(code) { return "https://t.me/" + BOT + "?start=promo_" + code; }
 
     function loginMsg() {
+      // Сессия просрочена или чужая – убираем, иначе /login/ сразу вернёт сюда же (петля).
+      try { localStorage.removeItem("astro_admin_s"); } catch (e) {}
       app.innerHTML = '<h1>Админка</h1><p>Войдите через Telegram: <a href="/login/?back=/admin/">Admin Login</a>. Или откройте из бота: <b>/admin</b> в @' + BOT + '.</p>';
     }
     if (!initData && !sess) { loginMsg(); return; }
