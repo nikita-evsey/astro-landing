@@ -451,6 +451,17 @@
     .ak-cc.miss { border-color: var(--accent); box-shadow: 0 0 0 2px #7b2d3b22; }
     .ak-cc-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
     .ak-cc-h b { font-size: 16px; }
+    /* Сводка событий под древом (2026-11-18): одна строка на событие, по датам, тап – к карточке события. */
+    .ak-evt { margin-top: 4px; }
+    .ak-evt table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.3; }
+    .ak-evt th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 0 6px 3px 0; border-bottom: 1px solid var(--rule); }
+    .ak-evt td { padding: 3px 6px 3px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+    .ak-evt tr.go { cursor: pointer; }
+    .ak-evt tr.go:hover td { background: #f4f1ea; }
+    .ak-evt td.d { white-space: nowrap; color: var(--muted); width: 1%; }
+    .ak-evt td.t { white-space: nowrap; width: 1%; }
+    .ak-evt td.c { color: var(--muted); overflow-wrap: anywhere; }
+    @media (max-width: 640px) { .ak-evt td.t { white-space: normal; } }
     .ak-q { font-size: 13px; color: var(--muted); margin: 3px 0 8px; line-height: 1.35; }
     .ak-ev { border: 1px solid var(--rule); border-radius: 8px; background: #faf8f3; padding: 10px 12px 12px; margin-top: 10px; position: relative; display: grid; gap: 6px; }
     .ak-ev .ak-x { position: absolute; right: 2px; top: 2px; }
@@ -2274,6 +2285,42 @@
       return box;
     }
 
+    // ---------- сводка событий под древом: компактная таблица по датам ----------
+    function evDateShort(o) {
+      if (!hasY(o)) return "без даты";
+      var p2 = function (n) { return (n < 10 ? "0" : "") + n; }, s;
+      if (o.season) s = SEASON_NAME[o.season] + " " + o.y;
+      else if (o.m && o.d) s = p2(o.d) + "." + p2(o.m) + "." + o.y;
+      else if (o.m) s = p2(o.m) + "." + o.y;
+      else s = String(o.y);
+      return (o.approx ? "≈ " : "") + s;
+    }
+    function evKey(o) { return hasY(o) ? o.y * 10000 + (o.m || 0) * 100 + (o.d || 0) : 1e9; }
+    function eventsTable(f) {
+      var box = el("div", { class: "fld wide ak-evt" });
+      var draw = function () {
+        while (box.firstChild) box.removeChild(box.firstChild);
+        box.appendChild(el("label", { text: "События по годам" }));
+        var list = (state.data.events || []).filter(evFilled).slice().sort(function (a, b) { return evKey(a.date) - evKey(b.date); });
+        if (!list.length) { box.appendChild(el("div", { class: "ak-hint", text: "События из разделов выше появятся здесь по порядку." })); return; }
+        box.appendChild(el("table", {}, [
+          el("thead", {}, [el("tr", {}, [el("th", { text: "Когда" }), el("th", { text: "Событие" }), el("th", { text: "Комментарий" })])]),
+          el("tbody", {}, list.map(function (e) {
+            var cat = catOf(e, f), tr = el("tr", { class: "go", title: "Открыть событие" }, [
+              el("td", { class: "d", text: evDateShort(e.date) }),
+              el("td", { class: "t", text: e.type + (e.name ? " (" + e.name + ")" : "") }),
+              el("td", { class: "c", text: e.comment || "" }),
+            ]);
+            tr.onclick = function () { goTo("ak-cat-" + cat); };
+            return tr;
+          })),
+        ]));
+      };
+      state.evTable = draw;
+      draw();
+      return box;
+    }
+
     // ---------- шкала сверху, «Осталось узнать», проверка перед отправкой ----------
     function catsSpec() { return state.item.fields.filter(function (x) { return x.type === "cats"; })[0]; }
     function kinSpec() { return state.item.fields.filter(function (x) { return x.type === "kin"; })[0]; }
@@ -2422,7 +2469,7 @@
       if (state.restored) { root.appendChild(el("p", { class: "ak-ok", text: "Восстановил несохранённые правки из этого браузера." })); state.restored = false; setTimeout(flush, 300); }
       var form = el("div", { class: "ak-form" }), groups = {};
       state.showIf = []; state.catDraws = []; state.tried = false;
-      state.kinRefresh = state.treeRedraw = state.refreshTop = state.refreshTodo = state.treeOpen = null;
+      state.kinRefresh = state.treeRedraw = state.refreshTop = state.refreshTodo = state.treeOpen = state.evTable = null;
       var newStyle = it.fields.some(function (x) { return x.type === "cats" && x.required; });
       if (newStyle) { root.appendChild(topBar()); form.appendChild(introCard()); }
       it.fields.forEach(function (f) {
@@ -2440,6 +2487,7 @@
             ob.onclick = function () { state.treeOpen(); };
             holder.appendChild(ob); form.appendChild(holder);
           } else form.appendChild(treeField(f));
+          var cfs = catsSpec(); if (cfs) form.appendChild(eventsTable(cfs));   // под древом – события таблицей (решение Никиты 2026-11-18)
         }
         else if (f.type === "choice") form.appendChild(choiceField(f));
         else if (f.type === "kin") form.appendChild(kinField(f));
@@ -2486,6 +2534,7 @@
       if (state.item && state.item.kind !== "relative") setTitle(pname(state.data));
       (state.showIf || []).forEach(function (fn) { fn(); });
       if (state.refreshTop) state.refreshTop();
+      if (state.evTable) state.evTable();
       lsPut(state.item.id, state.data, state.rev);
       clearTimeout(state.timer); state.timer = setTimeout(flush, 1200);
     }
