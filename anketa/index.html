@@ -477,6 +477,12 @@
     .ak-kin.miss { border-color: var(--accent); box-shadow: 0 0 0 2px #7b2d3b22; }
     .ak-kr { border-top: 1px solid var(--rule); padding: 10px 0; display: grid; gap: 6px; }
     .ak-kr:first-child { border-top: 0; }
+    .ak-kin2 > .ak-kr:first-child { border-top: 0; }
+    @media (min-width: 641px) {
+      .ak-kin2 { display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
+      .ak-kin2 > .ak-kr { align-content: start; }
+      .ak-kin2 > .ak-kr:nth-child(2) { border-top: 0; }
+    }
     .ak-kr-h { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
     .ak-kr-h b { font-size: 15px; }
     .ak-kr .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; max-width: 420px; }
@@ -2195,7 +2201,9 @@
       function draw() {
         while (box.firstChild) box.removeChild(box.firstChild);
         var base = kinBase(true);
-        base.forEach(function (k) { box.appendChild(deathRow(k.person, k.label, false)); });
+        // На компьютере – две колонки (решение Никиты 2026-11-18): слева мама и бабушки, справа папа и дедушки.
+        // Порядок KIN_BASE уже попарный (мама/папа, бабушка/дедушка по маме, по папе) – сетка по строкам.
+        box.appendChild(el("div", { class: "ak-kin2" }, base.map(function (k) { return deathRow(k.person, k.label, false); })));
         var others = kinOthers(base);
         if (others.length) {
           box.appendChild(el("div", { class: "ak-group-t", style: "margin-top:12px", text: "Другие умершие родственники" }));
