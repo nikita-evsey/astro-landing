@@ -473,8 +473,35 @@
     .ak-d2 .apx { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; font-weight: 400; margin: 0 0 0 4px; cursor: pointer; }
     .ak-d2 .apx input { width: 18px; height: 18px; }
     .ak-d2 .shown { font-size: 12px; color: var(--muted); margin-top: 4px; min-height: 16px; }
+    /* Карточки «События жизни» компактнее (2026-11-18): мельче шрифт и кнопки, меньше отступы – больше карточек на экране. */
+    .ak-cats { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+    .ak-cats .ak-cc { padding: 9px 11px 10px; }
+    .ak-cats .ak-cc-h b { font-size: 15px; }
+    .ak-cats .ak-badge { font-size: 12px; padding: 1px 8px; }
+    .ak-cats .ak-q { font-size: 12px; margin: 1px 0 4px; }
+    .ak-cats .ak-ev { padding: 7px 9px 8px; margin-top: 6px; gap: 3px; }
+    .ak-cats .ak-ev > label { font-size: 11px; margin: 1px 0 0; }
+    .ak-cats .ak-chips { gap: 4px; }
+    .ak-cats .ak-c2 { font-size: 13px; padding: 4px 10px; min-height: 30px; }
+    .ak-cats input:not([type=checkbox]), .ak-cats select { height: 30px; font-size: 14px; padding: 4px 7px; }
+    .ak-cats .ak-d2 .ymd { margin-bottom: 4px; gap: 4px; }
+    .ak-cats .ak-d2 .apx { font-size: 13px; }
+    .ak-cats .ak-d2 .apx input { width: 16px; height: 16px; }
+    .ak-cats .ak-d2 .shown { font-size: 11px; margin-top: 2px; min-height: 14px; }
+    .ak-cats .ak-add { font-size: 13px; padding: 5px 10px; margin-top: 6px; }
+    .ak-cats .ak-none { font-size: 13px; padding: 5px 10px; margin-top: 5px; }
+    .ak-cats .ak-ev .ak-x { line-height: 24px; top: 0; }
+    @media (max-width: 640px) { .ak-cats input:not([type=checkbox]), .ak-cats select { font-size: 16px; } }   /* iPhone не увеличивает страницу при вводе */
     .ak-kin { border: 1px solid var(--rule); border-radius: 10px; background: #fff; padding: 4px 14px 12px; scroll-margin-top: 70px; }
     .ak-kin.miss { border-color: var(--accent); box-shadow: 0 0 0 2px #7b2d3b22; }
+    /* Меню «Кого добавить?» (2026-11-18): заметная панель, плавно появляется и мягко подсвечивается. */
+    .ak-addmenu { margin-top: 10px; padding: 10px 12px 12px; border: 1px solid #2f5d8a; border-radius: 10px; background: #eef3f8; animation: akMenuIn .25s ease-out, akGlow 1.4s ease-out .25s 2; overflow-anchor: none; }
+    .ak-addmenu-q { font-size: 14px; font-weight: 600; color: #2f5d8a; margin-bottom: 8px; }
+    .ak-addmenu .ak-c2 { border-color: #9fb6cf; }
+    .ak-addmenu .ak-c2:hover { background: #2f5d8a; border-color: #2f5d8a; color: #fff; }
+    @keyframes akMenuIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    @keyframes akGlow { 0% { box-shadow: 0 0 0 0 #2f5d8a55; } 70% { box-shadow: 0 0 0 8px #2f5d8a00; } 100% { box-shadow: 0 0 0 0 #2f5d8a00; } }
+    @media (prefers-reduced-motion: reduce) { .ak-addmenu { animation: none; } }
     .ak-kr { border-top: 1px solid var(--rule); padding: 10px 0; display: grid; gap: 6px; }
     .ak-kr:first-child { border-top: 0; }
     .ak-kin2 > .ak-kr:first-child { border-top: 0; }
@@ -2161,7 +2188,8 @@
         }
         var done = function () { addStep = ""; changed(); draw(); kinSync(); };
         var base = kinBase(true), mom = base[0].person, dad = base[1].person;
-        wrap.appendChild(el("div", { class: "ak-q", style: "margin-top:10px", text: addStep === "menu" ? "Кого добавить?" : addStep.indexOf("great") === 0 ? "Чья мама или папа?" : "С чьей стороны?" }));
+        wrap.className = "ak-addmenu";
+        wrap.appendChild(el("div", { class: "ak-addmenu-q", text: addStep === "menu" ? "Кого добавить?" : addStep.indexOf("great") === 0 ? "Чья мама или папа?" : "С чьей стороны?" }));
         var opts = [];
         if (addStep === "menu") opts = [["great:f", "Прабабушка"], ["great:m", "Прадедушка"], ["brother", "Брат"], ["sister", "Сестра"], ["uncle", "Дядя"], ["aunt", "Тётя"],
           ["husband", "Муж"], ["wife", "Жена"], ["son", "Сын"], ["daughter", "Дочь"], ["other", "Другой родственник"]];
@@ -2209,8 +2237,11 @@
           box.appendChild(el("div", { class: "ak-group-t", style: "margin-top:12px", text: "Другие умершие родственники" }));
           others.forEach(function (p) { box.appendChild(deathRow(p, p.rel || "Родственник", true)); });
         }
-        box.appendChild(addMenu());
-        box.appendChild(el("div", { class: "ak-hint", style: "margin-top:8px" }, ["Эти же люди – в семейном древе ниже, правки видны и там, и здесь. ",
+        var am = addMenu();
+        box.appendChild(am);
+        // Меню «кого добавить» – держим в поле зрения (без скачка страницы), подсветка – анимацией в CSS.
+        if (addStep && am.scrollIntoView) setTimeout(function () { am.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 30);
+        box.appendChild(el("div", { class: "ak-hint", style: "margin-top:8px" }, ["Эти же люди – подробнее, в семейном древе ниже, правки видны и там, и здесь. ",
           el("button", { type: "button", class: "ak-link", style: "font-size:12px", text: "Посмотреть древо", onclick: function () { openTree(); } })]));
         var miss = state.tried && f.required && base.some(function (k) { return !kinAnswered(k.person); });
         box.className = "ak-kin wide" + (miss ? " miss" : "");
