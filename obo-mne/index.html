@@ -348,6 +348,84 @@
 
 </main>
 
+<section class="rv" id="otzyvy" aria-labelledby="rv-h"><div class="rv-in">
+  <div class="rv-head"><h2 id="rv-h">Отзывы</h2><div class="rv-nav"><button class="rv-prev" type="button" aria-label="Предыдущие отзывы">←</button><button class="rv-next" type="button" aria-label="Следующие отзывы">→</button></div></div>
+  <div class="rv-track"><figure class="rv-item" data-review="iryna" data-type="video"><div class="rv-card"><video preload="none" playsinline poster="/reviews/2026-11-20-iryna.jpg" aria-label="Видеоотзыв: Iryna S."><source src="/reviews/2026-11-20-iryna.mp4" type="video/mp4"></video><button class="rv-play" type="button" aria-label="Смотреть отзыв: Iryna S."><span><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M0 0v24l22-12z" fill="#1C2B4A"/></svg></span></button></div><figcaption>Iryna S.</figcaption></figure><figure class="rv-item" data-review="anastasia" data-type="video"><div class="rv-card"><video preload="none" playsinline poster="/reviews/2026-11-20-anastasia.jpg" aria-label="Видеоотзыв: Anastasia K."><source src="/reviews/2026-11-20-anastasia.mp4" type="video/mp4"></video><button class="rv-play" type="button" aria-label="Смотреть отзыв: Anastasia K."><span><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M0 0v24l22-12z" fill="#1C2B4A"/></svg></span></button></div><figcaption>Anastasia K.</figcaption></figure><figure class="rv-item" data-review="bauyrzhan" data-type="video"><div class="rv-card"><video preload="none" playsinline poster="/reviews/2026-11-19-bauyrzhan.jpg" aria-label="Видеоотзыв: Bauyrzhan T."><source src="/reviews/2026-11-19-bauyrzhan.mp4" type="video/mp4"></video><button class="rv-play" type="button" aria-label="Смотреть отзыв: Bauyrzhan T."><span><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M0 0v24l22-12z" fill="#1C2B4A"/></svg></span></button></div><figcaption>Bauyrzhan T.</figcaption></figure><figure class="rv-item" data-review="olga" data-type="video"><div class="rv-card"><video preload="none" playsinline poster="/reviews/2026-11-19-olga.jpg" aria-label="Видеоотзыв: Olga D."><source src="/reviews/2026-11-19-olga.mp4" type="video/mp4"></video><button class="rv-play" type="button" aria-label="Смотреть отзыв: Olga D."><span><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M0 0v24l22-12z" fill="#1C2B4A"/></svg></span></button></div><figcaption>Olga D.</figcaption></figure><figure class="rv-item" data-review="tetavik" data-type="video"><div class="rv-card"><video preload="none" playsinline poster="/reviews/2026-11-19-tetavik.jpg" aria-label="Видеоотзыв: Tetavik I."><source src="/reviews/2026-11-19-tetavik.mp4" type="video/mp4"></video><button class="rv-play" type="button" aria-label="Смотреть отзыв: Tetavik I."><span><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M0 0v24l22-12z" fill="#1C2B4A"/></svg></span></button></div><figcaption>Tetavik I.</figcaption></figure><figure class="rv-item" data-review="ernst" data-type="video"><div class="rv-card"><video preload="none" playsinline poster="/reviews/2026-11-19-ernst.jpg" aria-label="Видеоотзыв: Ernst K."><source src="/reviews/2026-11-19-ernst.mp4" type="video/mp4"></video><button class="rv-play" type="button" aria-label="Смотреть отзыв: Ernst K."><span><svg width="22" height="24" viewBox="0 0 22 24" aria-hidden="true"><path d="M0 0v24l22-12z" fill="#1C2B4A"/></svg></span></button></div><figcaption>Ernst K.</figcaption></figure></div>
+</div><dialog class="rv-box"><button type="button" aria-label="Закрыть">×</button><img alt=""></dialog></section>
+<style>
+  .rv { padding: 8px 0 72px; }
+  .rv-in { max-width: 1040px; margin: 0 auto; }
+  .rv-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; max-width: 660px; margin: 0 auto; padding: 0 20px; }
+  .rv-head h2 { margin: 48px 0 20px; }
+  .rv-nav { display: flex; gap: 8px; margin-bottom: 20px; }
+  .rv-nav button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--rule); background: var(--paper); color: var(--blue);
+    font: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
+  .rv-nav button:hover:not(:disabled) { border-color: var(--blue); }
+  .rv-nav button:disabled { opacity: .35; cursor: default; }
+  .rv-track { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+    padding: 4px max(20px, calc((100% - 620px) / 2)) 12px; scroll-padding-inline: max(20px, calc((100% - 620px) / 2));
+    scrollbar-width: none; overscroll-behavior-x: contain; }
+  .rv-track::-webkit-scrollbar { display: none; }
+  .rv-item { flex: 0 0 min(64vw, 230px); scroll-snap-align: start; margin: 0; }
+  .rv-card { position: relative; display: block; width: 100%; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden;
+    background: var(--blue); border: 0; padding: 0; cursor: pointer; box-shadow: 0 1px 2px rgba(23,25,30,.08); }
+  .rv-card video, .rv-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .rv-img img { object-position: top; background: #fff; }
+  .rv-play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; border: 0; padding: 0;
+    background: linear-gradient(to top, rgba(28,43,74,.45), rgba(28,43,74,0) 45%); cursor: pointer; }
+  .rv-play span { width: 60px; height: 60px; border-radius: 50%; background: rgba(250,247,241,.92); display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.2); }
+  .rv-play svg { margin-left: 4px; }
+  .rv-on .rv-play { display: none; }
+  .rv-item figcaption { font-size: 15px; color: var(--muted); margin-top: 10px; padding-left: 2px; }
+  .rv-box { border: 0; padding: 0; background: none; max-width: 96vw; max-height: 94vh; }
+  .rv-box::backdrop { background: rgba(23,25,30,.85); }
+  .rv-box img { display: block; max-width: 96vw; max-height: 94vh; border-radius: 8px; }
+  .rv-box button { position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0;
+    background: rgba(250,247,241,.92); color: var(--ink); font-size: 22px; cursor: pointer; }
+</style>
+<script>
+(function () {
+  var root = document.getElementById("otzyvy"); if (!root) return;
+  var track = root.querySelector(".rv-track"), prev = root.querySelector(".rv-prev"), next = root.querySelector(".rv-next");
+  function ev(name, item, extra) {
+    var d = { event: name, review: item ? item.getAttribute("data-review") : null, review_type: item ? item.getAttribute("data-type") : null };
+    for (var k in extra || {}) d[k] = extra[k];
+    (window.dataLayer = window.dataLayer || []).push(d);
+  }
+  function step() { var c = track.querySelector(".rv-item"); return c ? c.getBoundingClientRect().width + 16 : 240; }
+  function arrows() {
+    prev.disabled = track.scrollLeft < 4;
+    next.disabled = track.scrollLeft + track.clientWidth > track.scrollWidth - 4;
+  }
+  prev.addEventListener("click", function () { track.scrollBy({ left: -step() }); ev("review_scroll", null, { direction: "prev" }); });
+  next.addEventListener("click", function () { track.scrollBy({ left: step() }); ev("review_scroll", null, { direction: "next" }); });
+  track.addEventListener("scroll", arrows, { passive: true }); window.addEventListener("resize", arrows); arrows();
+
+  var videos = [].slice.call(root.querySelectorAll("video"));
+  videos.forEach(function (v) {
+    var item = v.closest(".rv-item"), card = v.closest(".rv-card"), sent = {};
+    card.querySelector(".rv-play").addEventListener("click", function () { v.controls = true; card.classList.add("rv-on"); v.play(); });
+    v.addEventListener("play", function () {
+      card.classList.add("rv-on"); v.controls = true;
+      videos.forEach(function (o) { if (o !== v) o.pause(); });
+      if (!sent.play) { sent.play = 1; ev("review_play", item); }
+    });
+    v.addEventListener("ended", function () { if (!sent.end) { sent.end = 1; ev("review_complete", item); } });
+  });
+
+  var box = root.querySelector(".rv-box");
+  root.querySelectorAll(".rv-img").forEach(function (b) {
+    b.addEventListener("click", function () {
+      videos.forEach(function (o) { o.pause(); });
+      box.querySelector("img").src = b.getAttribute("data-full"); box.querySelector("img").alt = b.querySelector("img").alt;
+      if (box.showModal) box.showModal(); else window.open(b.getAttribute("data-full"));
+      ev("review_open", b.closest(".rv-item"));
+    });
+  });
+  box.addEventListener("click", function (e) { if (e.target === box || e.target.tagName === "BUTTON") box.close(); });
+})();
+</script>
 <footer class="foot dark"><div class="in">
   <div class="row">
     <div class="name">Никита Евсей<small>Астрологические консультации о детях и деньгах</small></div>
